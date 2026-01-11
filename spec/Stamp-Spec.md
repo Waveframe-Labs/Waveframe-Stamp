@@ -151,7 +151,7 @@ Stamp’s responsibility ends once valid metadata is structurally and semantical
 
 ## 4. Error Classification
 
-Stamp MUST classify all metadata issues into three categories: Fatal Errors, Repairable Errors, and Warnings. This classification determines how Stamp processes the artifact, what corrections may be applied, and what status codes are returned to downstream systems such as CRI-CORE.
+Stamp MUST classify all metadata issues into three categories: Fatal Errors, Repairable Errors, and Warnings. This classification determines how Stamp processes the artifact, what corrections may be applied, and which status codes are returned to downstream systems such as CRI-CORE.
 
 Error classification MUST be deterministic and based solely on structural and semantic metadata rules defined by the ARI Metadata Policy and Schema. Stamp MUST NOT infer user intent or alter content beyond what is necessary to repair or normalize metadata structure.
 
@@ -161,21 +161,21 @@ Error classification MUST be deterministic and based solely on structural and se
 
 Fatal errors represent violations that prevent a document from being brought into compliance through automated correction. When a fatal error is encountered, Stamp MUST:
 
-- halt processing,
-- refrain from modifying the file,
-- output a noncompliant status,
-- return exit code `2`,
-- include all fatal violations in the machine-readable report.
+- halt processing
+- refrain from modifying the file
+- output a noncompliant status
+- return exit code `2`
+- include all fatal violations in the machine-readable report
 
 Fatal errors include:
 
-- missing or invalid `author` object;
-- invalid DOI that does not match Zenodo or placeholder patterns;
-- invalid ORCID format;
-- malformed YAML that cannot be parsed safely;
-- circular dependencies in the dependency graph;
-- invalid `type`, `domain`, `filetype`, or `status` values not in the allowed enumerations;
-- missing required fields that cannot be safely defaulted.
+- missing or invalid `author` object
+- invalid DOI that does not match Zenodo or placeholder patterns
+- invalid ORCID format
+- malformed YAML that cannot be parsed safely
+- invalid `type`, `domain`, `filetype`, or `status` values not in allowed enumerations
+- missing required fields that cannot be safely defaulted
+- circular dependencies detected when Stamp is running in repository-mode with full graph context available
 
 Fatal errors MUST NOT be auto-corrected.
 
@@ -185,21 +185,23 @@ Fatal errors MUST NOT be auto-corrected.
 
 Repairable errors represent metadata issues that Stamp CAN correct deterministically without risking semantic misinterpretation or violating provenance rules. When repairable errors are detected, Stamp MUST:
 
-- apply the appropriate correction,
-- rewrite the metadata block,
-- preserve semantic equivalence,
-- return exit code `1`,
-- report all corrections in the machine-readable summary.
+- apply the appropriate correction
+- rewrite the metadata block
+- preserve semantic equivalence
+- return exit code `1`
+- report all corrections in the machine-readable summary
 
 Repairable errors include:
 
-- missing fields that can be deterministically defaulted (e.g., missing `anchors`, empty dependency lists);
-- incorrect field ordering;
-- indentation inconsistencies;
-- missing YAML fences;
-- missing DOI placeholder when version is unreleased;
-- missing `ai_assistance_details` when ai_assisted = partial/extensive;
-- outdated `updated` date (may be auto-updated).
+- missing fields that can be deterministically defaulted (e.g., missing `anchors`, empty dependency lists)
+- incorrect field ordering
+- indentation inconsistencies
+- missing YAML fences
+- missing DOI placeholder when version is unreleased
+- missing `ai_assistance_details` when ai_assisted = partial/extensive
+- outdated `updated` date when substantive repairs are made
+
+Stamp MUST NOT update the `updated` field unless at least one other substantive repairable error was corrected in the same execution. Updating the `updated` field alone MUST NOT trigger a rewrite or hash change, preventing compliance loops.
 
 Stamp MUST ensure corrections do not fabricate authorship, provenance, or version data.
 
@@ -209,16 +211,16 @@ Stamp MUST ensure corrections do not fabricate authorship, provenance, or versio
 
 Warnings represent situations where metadata is valid and compliant but may indicate unusual or potentially unintended patterns. When warnings occur, Stamp MUST:
 
-- allow the file to pass unmodified,
-- return exit code `0`,
-- include warnings in the machine-readable report.
+- allow the file to pass unmodified
+- return exit code `0`
+- include warnings in the machine-readable report
 
 Warnings include:
 
-- unusually large numbers of declared dependencies;
-- unresolved anchors that do not correspond to known files (non-fatal);
-- future-dated `updated` timestamps;
-- empty or placeholder DOIs for older documents (allowed but suboptimal).
+- unusually large numbers of declared dependencies
+- unresolved anchors that do not correspond to known files
+- future-dated `updated` timestamps
+- empty or placeholder DOIs for older documents (allowed but suboptimal)
 
 Warnings MUST NEVER cause Stamp to halt processing or rewrite the document.
 
@@ -229,8 +231,8 @@ Warnings MUST NEVER cause Stamp to halt processing or rewrite the document.
 Stamp MUST enforce the following rules when multiple error types are present:
 
 - Any presence of a Fatal Error overrides all other classifications and halts processing.
-- If no Fatal Errors exist but one or more Repairable Errors exist → Stamp MUST repair and continue.
-- If only Warnings exist → Stamp MUST allow the document to pass without modification.
+- If no Fatal Errors exist but one or more Repairable Errors exist, Stamp MUST repair and continue.
+- If only Warnings exist, Stamp MUST allow the document to pass without modification.
 
 Stamp MUST apply error categories in the following priority order:
 
@@ -246,15 +248,15 @@ This ordering prevents partial correction of a document that is fundamentally in
 
 For every run, Stamp MUST produce a machine-readable error report containing:
 
-- error classification;
-- list of individual issues grouped by category;
-- whether auto-corrections were applied;
-- final compliance status;
-- exit code.
+- error classification
+- list of individual issues grouped by category
+- whether auto-corrections were applied
+- final compliance status
+- exit code
 
 This report is used by CRI-CORE for enforcement and by Forge for publication preprocessing.
 
----
+---  
 
 ## 5. Output Requirements
 
@@ -268,13 +270,13 @@ No hidden state, temporary transformations, or non-reproducible modifications ma
 
 When repairable errors are present, Stamp MUST produce a rewritten file with the YAML metadata block normalized according to canonical formatting rules. The rewritten file MUST:
 
-- preserve semantic equivalence with the original metadata,
-- retain all user-authored content outside the metadata block,
-- use the canonical field ordering as defined by ARI Metadata Policy,
-- correct structural issues (indentation, quoting, list formats),
-- inject required fields with deterministic placeholder values when appropriate.
+- preserve semantic equivalence with the original metadata
+- retain all user-authored content outside the metadata block
+- use the canonical field ordering defined by ARI Metadata Policy
+- correct structural issues (indentation, quoting, list formats)
+- inject required fields with deterministic placeholder values when appropriate
 
-Stamp MUST NOT alter the body content of the document. Only the metadata block may be modified.
+Stamp MUST NOT alter the body content of the document.
 
 If the input file is already compliant and no repairs are required, Stamp MUST NOT rewrite the file.
 
@@ -284,15 +286,17 @@ If the input file is already compliant and no repairs are required, Stamp MUST N
 
 For every run, Stamp MUST generate a machine-readable validation report in JSON format. The report MUST include:
 
-- `status`: `"pass"`, `"repairable"`, or `"fail"`;
-- `exit_code`: integer value corresponding to error class;
-- `fatal_errors`: list of violations classified as fatal;
-- `repairable_errors`: list of issues corrected by Stamp;
-- `warnings`: list of non-fatal advisories;
-- `corrections_applied`: list of transformations made to metadata;
-- `original_hash`: SHA-256 hash of input file;
-- `rewritten_hash` (if rewritten): SHA-256 hash of normalized output file;
-- `timestamp`: ISO-8601 timestamp of validation run.
+- `status`: `"pass"`, `"repairable"`, or `"fail"`
+- `exit_code`: integer value corresponding to error class
+- `fatal_errors`: list of violations classified as fatal
+- `repairable_errors`: list of issues corrected by Stamp
+- `warnings`: list of non-fatal advisories
+- `corrections_applied`: list of transformations applied
+- `original_hash`: SHA-256 hash of the entire input file
+- `rewritten_hash` (if rewritten): SHA-256 hash of the entire normalized output file
+- `timestamp`: ISO-8601 timestamp of validation run
+
+Hashes MUST be computed using full file content, not only metadata, to guarantee complete artifact provenance.
 
 The report MUST be generated even if the document passes with no warnings.
 
@@ -302,7 +306,7 @@ The report MUST be generated even if the document passes with no warnings.
 
 Stamp MUST return deterministic exit codes based on the highest-severity condition encountered:
 
-- `0` — clean compliance (no errors, no warnings or warnings only)
+- `0` — clean compliance (warnings allowed)
 - `1` — repairable issues were automatically corrected
 - `2` — fatal errors encountered; document is noncompliant and cannot be processed
 
@@ -316,13 +320,13 @@ Stamp MUST support two output modes:
 
 1. **In-place mode**  
    - Rewrites the file directly when repairs are required.
-   - Non-destructive, preserving original formatting in the body.
+   - Preserves original body formatting.
 
 2. **Output directory mode**  
    - Writes the normalized file to a designated output directory.
    - Leaves original input untouched.
 
-For CLI and GitHub Action usage, providing an explicit output directory MUST switch Stamp to non-destructive mode by default.
+Specifying an output directory MUST switch Stamp to non-destructive mode.
 
 ---
 
@@ -330,9 +334,9 @@ For CLI and GitHub Action usage, providing an explicit output directory MUST swi
 
 Stamp SHOULD provide optional human-readable log output to stdout or stderr containing:
 
-- summary of validation process,
-- description of corrections applied,
-- warnings and advisory messages.
+- summary of validation steps
+- description of corrections applied
+- warnings and advisory messages
 
 Log output MUST NOT contain any information absent from the machine-readable report.
 
@@ -342,11 +346,11 @@ Log output MUST NOT contain any information absent from the machine-readable rep
 
 Stamp MUST NOT:
 
-- generate temporary files not reported in the validation summary,
-- store or rely on local caches,
-- behave differently across runs with identical inputs.
+- generate unreported temporary files
+- rely on cached metadata
+- produce different results across identical runs
 
-Determinism and reproduceability are mandatory so that CRI-CORE can depend on Stamp as a pre-validation contract.
+Determinism is required for reproducibility.
 
 ---
 
@@ -354,12 +358,32 @@ Determinism and reproduceability are mandatory so that CRI-CORE can depend on St
 
 If no repairable errors exist, Stamp MUST:
 
-- leave the file unmodified,
-- return exit code `0`,
-- still generate a complete validation report,
-- still produce a SHA-256 input hash.
+- leave the file unmodified
+- return exit code `0`
+- generate a complete validation report
+- compute and report the original SHA-256 hash
 
-This guarantees that Stamp can be safely used as a pre-commit or CI validation tool without rewriting compliant files.
+This ensures Stamp is safe for pre-commit enforcement and CI validation.
+
+---
+
+### 5.8 CLI Interface Contract
+
+Stamp MUST implement a stable command-line interface with the following flags:
+
+- `--check`  
+  Validate only. Do not modify files. Return exit codes based on error severity.
+
+- `--fix`  
+  Validate and apply deterministic corrections in-place or to an output directory.
+
+- `--output-dir <path>`  
+  Write normalized output to `<path>` instead of overwriting the source file.
+
+- `--json`  
+  Output the machine-readable report to stdout in JSON format.
+
+Additional flags may be added in MINOR versions but MUST NOT change the semantics of these flags except in a MAJOR version.
 
 ---
 
@@ -481,7 +505,11 @@ Stamp simply prepares the metadata substrate both systems depend on.
 
 ## 7. Versioning Rules
 
-Stamp MUST follow semantic versioning (`MAJOR.MINOR.PATCH`) and apply version increments based on the nature of changes to the specification or implementation. Version increments MUST reflect the impact of changes on downstream tools, repository metadata, and reproducibility guarantees. Stamp MUST NOT change behavior in ways that violate earlier version contracts without a corresponding MAJOR version increase.
+Stamp MUST follow semantic versioning (`MAJOR.MINOR.PATCH`) and apply version increments based on the nature of changes to the specification or implementation. Version increments MUST reflect the impact of changes on downstream tools, repository metadata, and reproducibility guarantees.
+
+Stamp MUST validate the format of the document’s `version` field, even though it MUST NOT modify this value.
+
+Stamp MUST NOT change behavior in ways that violate earlier version contracts without a corresponding MAJOR version increase.
 
 ---
 
@@ -489,14 +517,13 @@ Stamp MUST follow semantic versioning (`MAJOR.MINOR.PATCH`) and apply version in
 
 A MAJOR version increment MUST occur when:
 
-- breaking changes are introduced to metadata validation behavior;
-- new required fields are added to ARI Metadata Policy or Schema;
-- the canonical ordering of metadata fields changes;
-- backward-incompatible rules are introduced for AI-assistance logic;
-- error classification semantics change in ways that break prior tooling.
+- breaking changes are introduced to metadata validation behavior
+- new required fields are added to ARI Metadata Policy or Schema
+- the canonical ordering of metadata fields changes
+- backward-incompatible rules are introduced for AI-assistance logic
+- error classification semantics change in a breaking manner
 
-MAJOR increments represent contract-breaking changes.  
-CRI-CORE and Forge MUST be updated accordingly before or alongside rollout.
+CRI-CORE and Forge MUST be updated before or alongside the release of a MAJOR version.
 
 ---
 
@@ -504,21 +531,19 @@ CRI-CORE and Forge MUST be updated accordingly before or alongside rollout.
 
 A MINOR version increment MUST occur when:
 
-- new non-breaking validation rules are added;
-- new optional fields become recognized or normalized;
-- additional warnings or advisory checks are implemented;
-- new CLI features or modes are added without changing core behavior;
-- performance improvements or internal optimizations are introduced;
-- **default placeholder values are modified in a way that changes normalized output for previously-compliant files.**
+- new non-breaking validation rules are added
+- new optional fields become recognized or normalized
+- warnings or advisory checks are added
+- new CLI features or flags are added
+- performance improvements or internal optimizations are introduced
+- **default placeholders or injected values change in a way that alters normalized output for previously-compliant files**
 
 MINOR changes MUST NOT:
 
-- alter exit codes for pre-existing conditions,
-- change required fields,
-- change canonical ordering,
-- break deterministic output for previously-compliant metadata.
-
-MINOR increments represent additive expansion without breaking compatibility.
+- alter exit codes for pre-existing conditions
+- redefine required fields
+- change canonical field order
+- break deterministic output for compliant metadata
 
 ---
 
@@ -526,13 +551,13 @@ MINOR increments represent additive expansion without breaking compatibility.
 
 A PATCH version increment MUST occur when:
 
-- implementation bugs are fixed;
-- formatting inconsistencies are corrected;
-- validation edge cases are resolved without changing semantics;
-- **default placeholder values are updated in ways that do not alter the normalized output for previously-compliant files**;
-- internal code refactors preserve identical external behavior.
+- bugs are fixed
+- formatting inconsistencies are corrected
+- validation edge cases are resolved
+- **placeholder values are updated without altering normalized output for previously-compliant files**
+- internal refactoring preserves identical external behavior
 
-PATCH changes MUST produce identical results to prior versions for all compliant inputs.
+PATCH changes MUST produce identical results for all compliant inputs.
 
 ---
 
@@ -540,40 +565,35 @@ PATCH changes MUST produce identical results to prior versions for all compliant
 
 Stamp MUST:
 
-- reference a specific version of the ARI Metadata Schema;
-- fail gracefully when invoked with documents requiring unsupported schema versions;
-- clearly report schema-version mismatches as warnings or fatal errors depending on compatibility.
-
-Stamp MUST NOT automatically upgrade or reinterpret metadata according to newer schema versions without explicit user request or configuration.
+- pin behavior to a specific ARI Metadata Schema version
+- report schema mismatches as warnings or fatal errors
+- never auto-upgrade schema interpretation without explicit user request
 
 ---
 
 ### 7.5 Deterministic Upgrade Path
 
-Upgrading Stamp versions MUST NOT:
+Upgrading versions MUST NOT:
 
-- change output formatting for already-normalized metadata (unless MAJOR version);
-- introduce nondeterminism or environment-specific differences;
-- require manual migration for compliant files.
+- change output formatting for normalized files (unless MAJOR)
+- introduce nondeterminism or environment-specific differences
+- require manual migration for compliant files
 
-If a future version introduces changes requiring migration, Stamp MUST provide:
+If migration is required, Stamp MUST provide:
 
-- a deterministic migration mode,
-- a report specifying required changes,
-- a clear indication of which rules triggered migration.
+- deterministic migration mode
+- machine-readable migration report
+- explicit explanation of triggered rules
 
 ---
 
 ### 7.6 Version Declaration in Metadata
 
-Every governed file processed by Stamp MUST contain:
+Every governed file MUST define its own `version` field.
 
-- `version`: the document’s own version  
-- NOT the version of Stamp
+Stamp MUST NOT change or create version values unless explicitly invoked in version-bump mode.
 
-Stamp MUST NOT insert or modify the document’s semantic version unless explicitly invoked with a version-bump mode.
-
-Stamp MAY include its own version in the validation report, but MUST NOT alter the metadata of the document to reflect Stamp’s version.
+Stamp MAY include its own version in reports but MUST NOT write Stamp’s version into document metadata.
 
 ---
 
@@ -581,11 +601,11 @@ Stamp MAY include its own version in the validation report, but MUST NOT alter t
 
 Stamp MUST guarantee:
 
-- validation behavior is locked to the version of Stamp invoked;
-- normalization output remains identical for all compliant inputs across all PATCH versions within a given MINOR branch;
-- tests and reference outputs verify the behavior of each version against known baselines.
+- validation behavior is locked to the executing Stamp version
+- normalized output is stable across PATCH releases within a MINOR version
+- test suites confirm compatibility against reference outputs
 
-This ensures reproducibility across time and machines, supporting long-term provenance and auditability.
+This guarantees long-term reproducibility and auditability.
 
 ---
 
