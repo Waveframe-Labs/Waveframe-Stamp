@@ -1,23 +1,12 @@
-"""
-Normalizer Module
------------------
-Applies canonical ordering, indentation normalization, placeholder
-insertion, and timestamp updates (only when substantive repairs occur).
-Implements Section 3.3 and Section 4.2.
-"""
+# File: src/stamp/engine/normalizer.py
 
 class Normalizer:
-    def __init__(self):
-        pass
+    """
+    Minimal Normalizer Implementation
+    ---------------------------------
+    Returns metadata unchanged, without applying canonical ordering
+    or formatting adjustments. Placeholder behavior only.
+    """
 
     def normalize(self, metadata: dict, repairs: list) -> dict:
-        """
-        Normalize metadata in deterministic canonical form.
-
-        TODO:
-        - Canonical ordering rules
-        - Deterministic quoting/indentation
-        - Placeholder injection (anchors, dependencies, DOI)
-        - updated timestamp ONLY if repairs were made
-        """
-        raise NotImplementedError  
+        return metadata
