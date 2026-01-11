@@ -1,0 +1,114 @@
+name: Run Stamp Metadata Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      paths:
+        description: "Files to validate"
+        required: false
+        default: "**/*.md"
+      mode:
+        description: "Validation mode (check/fix)"
+        type: choice
+        options:
+          - check
+          - fix
+        default: "check"
+      output_dir:
+        description: "Optional output directory"
+        required: false
+  pull_request:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  stamp:
+    name: Run Stamp Validator
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Stamp
+        # NOTE: Change this to 'pip install stamp-core' for production use in other repos
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Configure Execution Parameters
+        id: config
+        shell: bash
+        run: |
+          # Default to 'check' and all markdown files for Push/PR
+          MODE="--check"
+          PATHS="**/*.md"
+          OUTDIR=""
+
+          # Override if this is a manual dispatch
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            if [[ "${{ inputs.mode }}" == "fix" ]]; then
+              MODE="--fix"
+            fi
+            
+            if [[ -n "${{ inputs.paths }}" ]]; then
+              PATHS="${{ inputs.paths }}"
+            fi
+
+            if [[ -n "${{ inputs.output_dir }}" ]]; then
+              OUTDIR="--output-dir ${{ inputs.output_dir }}"
+            fi
+          fi
+
+          echo "MODE=$MODE" >> $GITHUB_OUTPUT
+          echo "PATHS=$PATHS" >> $GITHUB_OUTPUT
+          echo "OUTDIR=$OUTDIR" >> $GITHUB_OUTPUT
+          
+          echo "::notice::Running Stamp with mode: $MODE on paths: $PATHS"
+
+      - name: Run Stamp
+        id: stamp_run
+        # We allow error here to handle the exit codes manually in the next step
+        continue-on-error: true
+        run: |
+          # Using redirection > for report as per Spec 5.8
+          stamp ${{ steps.config.outputs.MODE }} \
+                ${{ steps.config.outputs.OUTDIR }} \
+                "${{ steps.config.outputs.PATHS }}" \
+                --json > stamp_report.json
+          
+          # Capture the actual exit code of the stamp command
+          echo "EXIT_CODE=$?" >> $GITHUB_OUTPUT
+
+      - name: Upload Validation Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: stamp-validation-report
+          path: stamp_report.json
+
+      - name: Process Verification Results
+        if: always()
+        run: |
+          CODE=${{ steps.stamp_run.outputs.EXIT_CODE }}
+          
+          if [[ "$CODE" == "0" ]]; then
+            echo "✅ Stamp Verification Passed."
+            exit 0
+          elif [[ "$CODE" == "1" ]]; then
+            echo "⚠️ Repairable metadata issues detected."
+            echo "Run 'stamp --fix' locally or re-run this workflow in 'fix' mode."
+            # We fail the CI pipeline on code 1 so the user knows they must fix it
+            exit 1
+          elif [[ "$CODE" == "2" ]]; then
+            echo "❌ FATAL: Non-compliant metadata detected."
+            echo "These errors cannot be auto-repaired. Check the report."
+            exit 2
+          else
+            echo "❓ Unknown error occurred."
+            exit 1
+          fi
