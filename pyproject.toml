@@ -1,36 +1,51 @@
 [build-system]
-requires = ["setuptools>=65.0.0", "wheel"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 
 [project]
 name = "waveframe-stamp"
 version = "0.0.1"
-description = "Stamp — Metadata validator and normalizer for ARI-governed Markdown documents."
-authors = [
-    { name = "Shawn C. Wright", email = "swright@waveframelabs.org" }
-]
+description = "Metadata validator and normalizer enforcing ARI governance standards."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 
-# Empty now — real dependencies added later
-dependencies = []
+authors = [
+  { name = "Shawn C. Wright", email = "swright@waveframelabs.org" }
+]
 
-
-[project.urls]
-Homepage = "https://github.com/Waveframe-Labs/Waveframe-Stamp"
-Source = "https://github.com/Waveframe-Labs/Waveframe-Stamp"
-Issues = "https://github.com/Waveframe-Labs/Waveframe-Stamp/issues"
+dependencies = [
+  "ruamel.yaml>=0.18.0",
+  "jsonschema>=4.17.0",
+  "click>=8.1.0"
+]
 
 
 [project.scripts]
 stamp = "stamp.cli.main:main"
 
 
-[tool.setuptools]
-package-dir = { "" = "src" }
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "isort>=5.0.0",
+    "mypy>=1.0.0"
+]
 
-# Automatically find stamp/* packages under src/
+
+[project.urls]
+Homepage = "https://github.com/Waveframe-Labs/Waveframe-Stamp"
+Source = "https://github.com/Waveframe-Labs/Waveframe-Stamp"
+Issues = "https://github.com/Waveframe-Labs/Waveframe-Stamp/issues"
+Documentation = "https://waveframelabs.org"
+
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+
 [tool.setuptools.packages.find]
 where = ["src"]
