@@ -1,22 +1,13 @@
-"""
-Loader Module
--------------
-Responsible for reading files from disk, validating text format,
-and preparing raw content for parsing. Implements deterministic
-I/O handling according to Stamp-Spec.md Section 3.
-"""
+# File: src/stamp/engine/loader.py
 
 class Loader:
-    def __init__(self):
-        pass
+    """
+    Minimal Loader Implementation
+    -----------------------------
+    Loads text files from disk and returns the content as-is.
+    No validation or filtering implemented yet.
+    """
 
     def load_file(self, path: str) -> str:
-        """
-        Load a file from disk and return its contents as a string.
-
-        TODO:
-        - Validate file exists
-        - Reject binary or non-text inputs
-        - Normalize line endings
-        """
-        raise NotImplementedError  
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
