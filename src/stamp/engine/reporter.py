@@ -1,24 +1,30 @@
+# File: src/stamp/engine/reporter.py
 
-"""
-Reporter Module
----------------
-Generates machine-readable JSON output, including full-file hashes,
-validation results, timestamps, and rewritten-hash when applicable.
-Implements Section 5.2 of the specification.
-"""
+import time
 
 class Reporter:
-    def __init__(self):
-        pass
+    """
+    Minimal Reporter Implementation
+    --------------------------------
+    Generates a basic report structure using placeholder values.
+    """
 
     def build_report(self, path: str, original_hash: str,
                      rewritten_hash: str, results: dict) -> dict:
-        """
-        Construct the validation report object.
+        return {
+            "file": path,
+            "status": self._status_from_results(results),
+            "fatal_errors": results.get("fatal_errors", []),
+            "repairable_errors": results.get("repairable_errors", []),
+            "warnings": results.get("warnings", []),
+            "original_hash": original_hash,
+            "rewritten_hash": rewritten_hash,
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        }
 
-        TODO:
-        - Populate JSON data structure
-        - Include timestamp
-        - Reflect exit code and error classification
-        """
-        raise NotImplementedError  
+    def _status_from_results(self, results: dict) -> str:
+        if results.get("fatal_errors"):
+            return "fail"
+        if results.get("repairable_errors"):
+            return "repairable"
+        return "pass"
