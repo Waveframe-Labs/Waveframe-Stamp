@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=65.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "waveframe-stamp"
+version = "0.0.1"
+description = "Stamp — Metadata validator and normalizer for ARI-governed Markdown documents."
+authors = [
+    { name = "Shawn C. Wright", email = "swright@waveframelabs.org" }
+]
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+
+# Empty now — real dependencies added later
+dependencies = []
+
+
+[project.urls]
+Homepage = "https://github.com/Waveframe-Labs/Waveframe-Stamp"
+Source = "https://github.com/Waveframe-Labs/Waveframe-Stamp"
+Issues = "https://github.com/Waveframe-Labs/Waveframe-Stamp/issues"
+
+
+[project.scripts]
+stamp = "stamp.cli.main:main"
+
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+# Automatically find stamp/* packages under src/
+[tool.setuptools.packages.find]
+where = ["src"]
