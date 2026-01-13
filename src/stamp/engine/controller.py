@@ -2,206 +2,167 @@
 
 from __future__ import annotations
 
-import os
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 from .loader import Loader
-from .parser import Parser
+from .parser import MetadataParser
 from .validator import Validator
 from .normalizer import Normalizer
 from .reporter import Reporter
+from .dependency_graph import DependencyGraph
 
 
-class Controller:
+class StampController:
     """
-    Controller
-    ----------
-    The central orchestration layer for Stamp.
+    StampController
+    ----------------
+    Orchestrates the entire Stamp validation/normalization workflow.
 
-    Implements the full workflow as defined in Stamp-Spec.md §3, §4, §5:
-
-        Loader → Parser → Validator → Normalizer → Reporter
-
-    Responsibilities:
-        - Resolve paths from CLI
-        - Load file contents
-        - Parse metadata block
-        - Validate metadata + classify errors
-        - Apply normalization when allowed
-        - Rewrite file if repairable
-        - Generate machine-readable report
-        - Return exit codes and validation statuses
-
-    This module is intentionally stateless and deterministic.
+    Pipeline (per Stamp-Spec.md):
+        1. Load file contents
+        2. Parse metadata
+        3. Validate metadata (structural & semantic)
+        4. Add dependencies to global graph
+        5. After all files are processed, detect cycles
+        6. Normalize metadata (if repairable issues exist)
+        7. Generate machine-readable report
     """
 
-    def __init__(self, schema: Dict[str, Any]):
+    def __init__(self):
         self.loader = Loader()
-        self.parser = Parser()
-        self.validator = Validator(schema)
+        self.parser = MetadataParser()
+        self.validator = Validator()
         self.normalizer = Normalizer()
         self.reporter = Reporter()
+        self.graph = DependencyGraph()
+
+        # storage for accumulated dependency information
+        self._file_metadata: Dict[str, Dict] = {}
+        self._file_results: Dict[str, Dict] = {}
 
     # ----------------------------------------------------------------------
-    # PUBLIC ENTRYPOINTS
+    # MAIN ENTRY POINT
     # ----------------------------------------------------------------------
 
-    def process_file(
+    def process_files(
         self,
-        path: str,
-        fix: bool = False,
-        output_dir: Optional[str] = None,
-    ) -> Tuple[Dict[str, Any], int]:
+        file_paths: List[str],
+        mode: str = "check",
+        output_dir: Optional[str] = None
+    ) -> Dict[str, Dict]:
         """
-        Process a single file.
+        Processes multiple files and returns their reports.
 
-        Arguments:
-            path — filesystem path to Markdown file
-            fix — whether Stamp is allowed to auto-correct
-            output_dir — alternate write location for normalized output
-
-        Returns:
-            (report_dict, exit_code)
+        Steps:
+            - Load and parse each file
+            - Validate metadata
+            - Add deps to dependency graph
+            - After all parsed: detect cycles
+            - Normalize if required
+            - Write outputs (if fix mode)
+            - Return structured results
         """
 
-        # ----------------------------------------------------------
-        # 1. Load file
-        # ----------------------------------------------------------
-        original_content, loader_errors = self.loader.load_file(path)
+        # Phase 1 — Parse & Validate Each File
+        for path in file_paths:
+            try:
+                self._process_single_file(path)
+            except Exception as exc:
+                # catastrophic failure for a single file
+                self._file_results[path] = self.reporter.fatal(
+                    path,
+                    [f"Internal error while processing: {exc}"]
+                )
 
-        # If loader errors → fatal
-        if loader_errors:
-            validation = self.validator.validate(
-                metadata={},
-                body=original_content,
-                had_metadata=False,
-                loader_errors=loader_errors,
+        # Phase 2 — Dependency Graph Cycle Detection (Spec §4.1)
+        cycles = self.graph.detect_cycles()
+        if cycles:
+            # fatal errors for ALL files if cycles exist
+            cycle = cycles[0]  # report first cycle found
+            err_msg = f"Circular dependency detected: {' -> '.join(cycle)}"
+
+            for path in file_paths:
+                self._file_results[path] = self.reporter.fatal(
+                    path,
+                    [err_msg]
+                )
+
+            return self._file_results
+
+        # Phase 3 — Apply Fixes or Output Behavior
+        if mode == "fix":
+            for path, result in self._file_results.items():
+                if result.get("status") == "repairable":
+                    self._apply_normalization(path, result, output_dir)
+
+        return self._file_results
+
+    # ----------------------------------------------------------------------
+
+    def _process_single_file(self, path: str):
+        """
+        Process a single file:
+            - load
+            - parse metadata
+            - validate structure
+            - push deps to global graph
+            - store intermediate results
+        """
+
+        raw = self.loader.load_file(path)
+        parsed = self.parser.parse(raw)
+        metadata = parsed["metadata"]
+        body = parsed["body"]
+
+        validation = self.validator.validate(metadata)
+
+        # Add dependency edges (spec: this must occur before graph scan)
+        deps = metadata.get("dependencies", [])
+        self.graph.add_dependencies(path, deps)
+
+        # store for normalization or reporting
+        self._file_metadata[path] = {
+            "raw": raw,
+            "metadata": metadata,
+            "body": body,
+            "validation": validation
+        }
+
+        # build initial structured result
+        if validation["fatal_errors"]:
+            self._file_results[path] = self.reporter.fatal(
+                path, validation["fatal_errors"]
             )
-            report = self.reporter.generate_report(
-                path=path,
-                original_content=original_content,
-                rewritten_content=None,
-                validation=validation,
-                corrections=None,
+        elif validation["repairable_errors"]:
+            self._file_results[path] = self.reporter.repairable(
+                path,
+                validation["repairable_errors"],
+                validation["warnings"]
             )
-            return report, 2
-
-        # ----------------------------------------------------------
-        # 2. Parse YAML frontmatter
-        # ----------------------------------------------------------
-        metadata, body, had_metadata = self.parser.extract_metadata_block(
-            original_content
-        )
-
-        # ----------------------------------------------------------
-        # 3. Validate metadata
-        # ----------------------------------------------------------
-        validation = self.validator.validate(
-            metadata,
-            body,
-            had_metadata,
-            loader_errors,
-        )
-
-        # Exit code logic based on Stamp-Spec.md §5.3
-        if validation.fatal_errors:
-            # Fatal → do not rewrite
-            report = self.reporter.generate_report(
-                path=path,
-                original_content=original_content,
-                rewritten_content=None,
-                validation=validation,
-                corrections=None,
-            )
-            return report, 2
-
-        if validation.repairable_errors and not fix:
-            # Repairable but in CHECK mode → do not rewrite, return repairable exit code
-            report = self.reporter.generate_report(
-                path=path,
-                original_content=original_content,
-                rewritten_content=None,
-                validation=validation,
-                corrections=validation.repairable_errors,
-            )
-            return report, 1
-
-        # ----------------------------------------------------------
-        # 4. Apply normalization (only if fix=True)
-        # ----------------------------------------------------------
-        if validation.repairable_errors and fix:
-            normalized_yaml, body_out, corrections = self.normalizer.normalize(
-                validation.metadata,
-                validation.body,
-            )
-            rewritten = self._rebuild_document(normalized_yaml, body_out)
         else:
-            # No modifications required
-            rewritten = original_content
-            corrections = []
-
-        # ----------------------------------------------------------
-        # 5. Write output if fix=True or if output_dir provided
-        # ----------------------------------------------------------
-        rewritten_path = None
-
-        if (fix and validation.repairable_errors) or output_dir:
-            rewritten_path = self._write_output(
-                path=path,
-                content=rewritten,
-                output_dir=output_dir,
+            self._file_results[path] = self.reporter.clean(
+                path,
+                validation["warnings"]
             )
 
-        # ----------------------------------------------------------
-        # 6. Create final report
-        # ----------------------------------------------------------
-        report = self.reporter.generate_report(
-            path=rewritten_path or path,
-            original_content=original_content,
-            rewritten_content=rewritten if rewritten != original_content else None,
-            validation=validation,
-            corrections=corrections,
+    # ----------------------------------------------------------------------
+
+    def _apply_normalization(self, path: str, result: Dict, output_dir: Optional[str]):
+        """
+        Applies deterministic normalization to metadata and writes updated file
+        to disk or output directory.
+        """
+        file_data = self._file_metadata[path]
+        metadata = file_data["metadata"]
+        body = file_data["body"]
+
+        new_raw = self.normalizer.rewrite(metadata, body)
+        self.loader.write_file(
+            path=path,
+            content=new_raw,
+            output_dir=output_dir
         )
 
-        # Exit code:
-        # - 0 = pass/no repairs needed
-        # - 1 = repairs applied
-        # - 2 = fatal errors
-        exit_code = 1 if corrections else 0
+        # update report hash and status
+        result["rewritten"] = True
 
-        return report, exit_code
-
-    # ----------------------------------------------------------------------
-    # INTERNAL HELPERS
-    # ----------------------------------------------------------------------
-
-    def _rebuild_document(self, yaml_text: str, body: str) -> str:
-        """
-        Reconstruct the document after normalization:
-
-            ---
-            <yaml_text>
-            ---
-            <body>
-
-        Body is left unchanged.
-        """
-        return f"---\n{yaml_text}---\n{body}"
-
-    # ----------------------------------------------------------------------
-
-    def _write_output(self, path: str, content: str, output_dir: Optional[str]) -> str:
-        """
-        Write normalized content either in-place or into a designated output directory.
-        Returns the path written to.
-        """
-        if output_dir:
-            os.makedirs(output_dir, exist_ok=True)
-            out_path = os.path.join(output_dir, os.path.basename(path))
-        else:
-            out_path = path
-
-        with open(out_path, "w", encoding="utf-8") as fh:
-            fh.write(content)
-
-        return out_path
