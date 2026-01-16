@@ -1,3 +1,38 @@
+---
+title: "Stamp Implementation Architecture"
+filetype: "documentation"
+type: "specification"
+domain: "methodology"
+version: "0.0.1"
+doi: "TBD-0.0.1"
+status: "Draft"
+created: "2026-01-16"
+updated: "2026-01-16"
+
+author:
+  name: "Shawn C. Wright"
+  email: "swright@waveframelabs.org"
+  orcid: "https://orcid.org/0009-0006-6043-9295"
+
+maintainer:
+  name: "Waveframe Labs"
+  url: "https://waveframelabs.org"
+
+license: "Apache-2.0"
+
+copyright:
+  holder: "Waveframe Labs"
+  year: "2026"
+
+ai_assisted: "partial"
+ai_assistance_details: "AI-assisted drafting and structural refinement under direct human authorship and final approval."
+
+dependencies: []
+
+anchors:
+  - "STAMP-IMPLEMENTATION-ARCH-v0.0.1"
+---
+
 # Stamp Implementation Architecture
 version: 0.0.1
 status: Draft
