@@ -256,7 +256,111 @@ The CLI MUST NOT perform any semantic logic not already defined in the engine mo
 
 ---
 
-## 7. GitHub Action Wrapper
+## 7. Schema Validation and Error Translation
+
+Stamp performs metadata validation by applying the ARI Metadata Schema (JSON Schema, draft 2020-12) as the sole authoritative definition of structural correctness. All validation failures emitted by the JSON Schema engine MUST be translated into Stamp’s canonical error object format before any downstream processing occurs.
+
+Stamp MUST NOT expose raw JSON Schema error output directly to users or downstream systems.
+
+### 7.1 Validation Phases
+
+Schema-based validation occurs in two strictly ordered phases:
+
+1. **Schema Evaluation Phase**
+   - The extracted metadata block is validated against the selected ARI Metadata Schema version.
+   - Validation enforces:
+     - required fields
+     - enums
+     - regex patterns
+     - formats (e.g., date, email, URI)
+     - conditional logic (`if` / `then` / `allOf`)
+     - `additionalProperties = false`
+   - This phase is purely declarative and performs no mutation.
+
+2. **Error Translation Phase**
+   - All schema validation failures are translated into Stamp error objects.
+   - Translation is deterministic and rule-based.
+   - No semantic inference or policy interpretation is performed.
+
+Only translated Stamp error objects may propagate beyond the validation layer.
+
+---
+
+### 7.2 Canonical Error Classification Rules
+
+Each JSON Schema validation failure MUST be mapped to exactly one Stamp error object with the following classification dimensions:
+
+#### Severity Mapping
+
+| Schema Failure Type                                | Stamp Severity |
+|---------------------------------------------------|----------------|
+| Unknown or additional property                    | FATAL          |
+| Invalid enum value                                | FATAL          |
+| Invalid regex or format                           | FATAL          |
+| Missing required field                            | ERROR          |
+| Conditional requirement violation                 | ERROR          |
+| Forbidden field present                           | ERROR          |
+
+Severity indicates whether validation may continue and whether the artifact may be considered structurally valid.
+
+---
+
+#### Repairability Mapping
+
+Stamp MUST classify repairability conservatively:
+
+| Condition                                           | Repairable |
+|----------------------------------------------------|------------|
+| Missing deterministically defaultable fields        | true       |
+| Formatting or ordering violations                   | true       |
+| Forbidden field that can be safely removed          | true       |
+| Missing semantically meaningful content             | false      |
+| Enum or pattern violations                          | false      |
+| Invalid identifiers (DOI, ORCID, version)           | false      |
+
+Stamp MUST NOT fabricate semantic data under any circumstance.
+
+---
+
+### 7.3 Provenance and Enforcement Semantics
+
+Each translated error MUST explicitly declare its provenance and enforcement implications:
+
+- `source`: always `"schema"` for this phase
+- `invalidates_artifact`: true for FATAL errors
+- `invalidates_claim_state`: true for FATAL errors
+- `requires_human_approval`: true for all non-repairable errors
+
+CRI-CORE MUST be able to determine enforcement actions solely from the translated error objects without re-evaluating the schema.
+
+---
+
+### 7.4 Aggregation and Priority Rules
+
+When multiple schema validation failures occur:
+
+1. All failures MUST be collected and translated.
+2. The highest-severity error determines the overall validation outcome.
+3. No normalization or fixing MAY occur if any FATAL errors exist.
+4. Repairable errors MAY be normalized only after explicit user approval.
+
+Error ordering in reports MUST be stable and deterministic.
+
+---
+
+### 7.5 Stability and Contract Guarantees
+
+The schema-to-error translation rules defined in this section constitute a stable contract.
+
+- Implementations MAY change internal validation libraries.
+- Implementations MUST NOT change error classification semantics without a MAJOR version increment.
+- CRI-CORE and other downstream systems may rely on this contract as an ABI-level interface.
+
+This guarantees long-term interoperability across tooling layers.
+
+---
+
+## 8. GitHub Action Wrapper
 
 The GitHub Action will:
 
@@ -276,7 +380,7 @@ This ensures seamless integration into CI workflows while reusing the same engin
 
 ---
 
-## 8. Schema Vendoring Strategy
+## 9. Schema Vendoring Strategy
 
 Stamp MUST:
 
@@ -299,7 +403,7 @@ Vendoring ensures:
 
 ---
 
-## 9. Repository-Mode vs Single-File Mode
+## 10. Repository-Mode vs Single-File Mode
 
 ### Single-file mode (default)
 - Validates structure
@@ -318,7 +422,7 @@ This dual-mode design prevents false circular detection when Stamp is only given
 
 ---
 
-## 10. Future API Wrapper Pathway
+## 11. Future API Wrapper Pathway
 
 While v0.0.1 does not implement an API wrapper, the architecture supports future expansion:
 
@@ -336,7 +440,7 @@ This ensures long-term extensibility without locking the architecture prematurel
 
 ---
 
-## 11. Test Strategy
+## 12. Test Strategy
 
 Tests MUST verify:
 
@@ -357,7 +461,7 @@ Test fixtures will include:
 
 ---
 
-## 12. Implementation Roadmap
+## 13. Implementation Roadmap
 
 ### v0.0.1
 - Core engine
