@@ -124,7 +124,11 @@ filefilters.py
 
 ---
 
-## 5. CLI Architecture
+## 5
+
+---
+
+## 6. CLI Architecture
 
 The CLI will route user commands through a single entrypoint:
 
@@ -147,7 +151,7 @@ The CLI MUST NOT perform any semantic logic not already defined in the engine mo
 
 ---
 
-## 6. GitHub Action Wrapper
+## 7. GitHub Action Wrapper
 
 The GitHub Action will:
 
@@ -167,7 +171,7 @@ This ensures seamless integration into CI workflows while reusing the same engin
 
 ---
 
-## 7. Schema Vendoring Strategy
+## 8. Schema Vendoring Strategy
 
 Stamp MUST:
 
@@ -190,7 +194,7 @@ Vendoring ensures:
 
 ---
 
-## 8. Repository-Mode vs Single-File Mode
+## 9. Repository-Mode vs Single-File Mode
 
 ### Single-file mode (default)
 - Validates structure
@@ -209,7 +213,7 @@ This dual-mode design prevents false circular detection when Stamp is only given
 
 ---
 
-## 9. Future API Wrapper Pathway
+## 10. Future API Wrapper Pathway
 
 While v0.0.1 does not implement an API wrapper, the architecture supports future expansion:
 
@@ -227,7 +231,7 @@ This ensures long-term extensibility without locking the architecture prematurel
 
 ---
 
-## 10. Test Strategy
+## 11. Test Strategy
 
 Tests MUST verify:
 
@@ -248,7 +252,7 @@ Test fixtures will include:
 
 ---
 
-## 11. Implementation Roadmap
+## 12. Implementation Roadmap
 
 ### v0.0.1
 - Core engine
