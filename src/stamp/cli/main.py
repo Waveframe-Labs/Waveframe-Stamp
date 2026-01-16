@@ -1,116 +1,181 @@
 # File: src/stamp/cli/main.py
 
-from __future__ import annotations
-
-import json
-import glob
-import sys
-from pathlib import Path
-from typing import List, Optional
-
 import click
+import json
+from pathlib import Path
 
 from stamp.engine.controller import StampController
+from stamp.engine.fixer import Fixer
 
 
-@click.command()
-@click.argument(
-    "paths",
-    nargs=-1,
-    required=False,
-)
-@click.option(
-    "--check",
-    "mode",
-    flag_value="check",
-    default=True,
-    help="Validate metadata without modifying files.",
-)
-@click.option(
-    "--fix",
-    "mode",
-    flag_value="fix",
-    help="Validate and normalize metadata, rewriting files or writing to output directory.",
-)
-@click.option(
-    "--output-dir",
-    type=click.Path(file_okay=False, dir_okay=True, writable=True),
-    default=None,
-    help="Write normalized files to this directory instead of modifying originals.",
-)
-@click.option(
-    "--json",
-    "json_output",
-    is_flag=True,
-    help="Output machine-readable JSON report to STDOUT.",
-)
-def cli(paths: List[str], mode: str, output_dir: Optional[str], json_output: bool):
+@click.group()
+@click.version_option(package_name="stamp")
+def cli():
     """
-    Stamp CLI
-    ----------
-    Validates, normalizes, and reports on metadata compliance for Markdown files
-    according to the Aurora Metadata Policy & Schema.
-
-    USAGE:
-
-        stamp --check "**/*.md"
-        stamp --fix docs/**/*.md --output-dir fixed/
-        stamp --check file.md --json
-
+    Stamp CLI Interface
+    -------------------
+    Validates and normalizes ARI-governed metadata.
+    Provides:
+        - metadata validation
+        - normalized output
+        - diff generation for proposed fixes
+        - controlled fix application
     """
+    pass
 
+
+# ---------------------------------------------------------------------------
+# CHECK COMMAND (DEFAULT MODE)
+# ---------------------------------------------------------------------------
+
+@cli.command("check")
+@click.argument("paths", nargs=-1, type=click.Path(exists=True))
+@click.option("--json", "json_output", is_flag=True, help="Emit JSON report.")
+def check_cmd(paths, json_output):
+    """
+    Validate metadata without modifying files.
+    """
     controller = StampController()
+    results = []
 
-    # Handle default path pattern
-    if not paths:
-        paths = ["**/*.md"]
+    for path in paths:
+        report = controller.validate_single(path)
+        results.append(report)
 
-    # Expand glob patterns into file list
-    expanded: List[str] = []
-    for pattern in paths:
-        expanded.extend(glob.glob(pattern, recursive=True))
+        if not json_output:
+            click.echo(f"[{path}] status={report['status']} exit={report['exit_code']}")
 
-    if not expanded:
-        click.echo("No matching files found.", err=True)
-        sys.exit(0)
-
-    # Process files through the controller
-    results = controller.process_files(
-        expanded,
-        mode=mode,
-        output_dir=output_dir,
-    )
-
-    # JSON output case
     if json_output:
         click.echo(json.dumps(results, indent=2))
-        exit_code = _highest_exit_code(results)
-        sys.exit(exit_code)
 
-    # Human-readable output
-    for path, report in results.items():
-        status = report["status"]
-        click.echo(f"{path}: {status.upper()}")
-
-    exit_code = _highest_exit_code(results)
-    sys.exit(exit_code)
+    # exit based on highest severity
+    exit(max(r["exit_code"] for r in results))
 
 
-def _highest_exit_code(results: dict) -> int:
+# ---------------------------------------------------------------------------
+# FIX COMMAND (REPLACES OLD --fix)
+# ---------------------------------------------------------------------------
+
+@cli.command("fix")
+@click.argument("paths", nargs=-1, type=click.Path(exists=True))
+@click.option("--approve", is_flag=True, help="Approve modifications and apply them.")
+@click.option("--output-dir", default=None, help="Write fixed files to directory.")
+@click.option("--json", "json_output", is_flag=True, help="Emit JSON report.")
+def fix_cmd(paths, approve, output_dir, json_output):
     """
-    Compute Stamp exit code from per-file results.
-    Highest exit code always wins:
-
-        2 = fatal error (fail)
-        1 = repairable error
-        0 = clean or warnings only
+    Validate and optionally apply mechanical fixes.
+    Requires --approve to write changes.
     """
-    highest = 0
-    for report in results.values():
-        code = report.get("exit_code", 0)
-        if code > highest:
-            highest = code
-    return highest
+    controller = StampController()
+    fixer = Fixer()
+    results = []
+
+    for path in paths:
+        report = controller.validate_single(path)
+        original_text = controller.loader.load_file(path)
+
+        if report["exit_code"] == 2:
+            click.echo(f"❌ FATAL errors in {path}. No fixes applied.")
+            results.append(report)
+            continue
+
+        metadata, body = controller.parser.parse(original_text)
+
+        # generate proposed fixes
+        proposal = fixer.propose_fixes(original_text, metadata, body)
+
+        report["proposed_diff"] = proposal["diff"]
+        report["proposed_changed"] = proposal["changed"]
+
+        if proposal["changed"]:
+            click.echo(f"⚠️  Proposed fixes for: {path}")
+            click.echo("\n".join(proposal["diff"].splitlines()[:30]) + "\n...")
+
+            if approve:
+                fixer.apply_fixes(path, proposal["normalized"], controller.loader, output_dir)
+                click.echo(f"✅ Fixes applied to {path}")
+
+        results.append(report)
+
+    if json_output:
+        click.echo(json.dumps(results, indent=2))
+
+    exit(max(r["exit_code"] for r in results))
+
+
+# ---------------------------------------------------------------------------
+# PROPOSE-FIXES (no apply, just show diffs)
+# ---------------------------------------------------------------------------
+
+@cli.command("propose-fixes")
+@click.argument("paths", nargs=-1, type=click.Path(exists=True))
+@click.option("--json", "json_output", is_flag=True)
+def propose_fixes_cmd(paths, json_output):
+    """
+    Show diffs for mechanical fixes without applying them.
+    """
+    controller = StampController()
+    fixer = Fixer()
+
+    reports = []
+
+    for path in paths:
+        raw = controller.loader.load_file(path)
+        metadata, body = controller.parser.parse(raw)
+        proposal = fixer.propose_fixes(raw, metadata, body)
+
+        result = {
+            "path": path,
+            "changed": proposal["changed"],
+            "diff": proposal["diff"],
+        }
+        reports.append(result)
+
+        if not json_output:
+            if proposal["changed"]:
+                click.echo(f"⚠️ Changes proposed for {path}:\n")
+                click.echo(proposal["diff"])
+            else:
+                click.echo(f"✔ No fixes needed for {path}")
+
+    if json_output:
+        click.echo(json.dumps(reports, indent=2))
+
+
+# ---------------------------------------------------------------------------
+# APPLY-FIXES (explicit-only apply mode)
+# ---------------------------------------------------------------------------
+
+@cli.command("apply-fixes")
+@click.argument("paths", nargs=-1, type=click.Path(exists=True))
+@click.option("--output-dir", default=None)
+def apply_fixes_cmd(paths, output_dir):
+    """
+    Apply previously inspected fixes.
+    Requires the user to explicitly confirm before writing.
+    """
+    controller = StampController()
+    fixer = Fixer()
+
+    for path in paths:
+        raw = controller.loader.load_file(path)
+        metadata, body = controller.parser.parse(raw)
+
+        proposal = fixer.propose_fixes(raw, metadata, body)
+
+        if not proposal["changed"]:
+            click.echo(f"✔ Nothing to apply for {path}")
+            continue
+
+        click.echo(f"⚠️ Reviewing changes for: {path}\n")
+        click.echo(proposal["diff"])
+
+        # ask user for explicit confirmation
+        if click.confirm(f"Apply these fixes to {path}?", default=False):
+            fixer.apply_fixes(path, proposal["normalized"], controller.loader, output_dir)
+            click.echo(f"✅ Fixes applied to {path}")
+        else:
+            click.echo(f"❌ Fixes skipped for {path}")
 
 
 if __name__ == "__main__":
