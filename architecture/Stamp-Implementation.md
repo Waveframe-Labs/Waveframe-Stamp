@@ -159,7 +159,77 @@ filefilters.py
 
 ---
 
-## 5
+## 5. Stamp Error Object Contract (Normative)
+
+Stamp’s primary output is a structured set of diagnostic objects (“errors”) emitted during validation and normalization. This section defines the **canonical error object contract**. This contract is normative and MUST remain stable across validator implementations.
+
+All engine modules that emit diagnostics (schema validation, custom rules, normalization, fixing) MUST produce errors conforming to this contract.
+
+### 5.1 Error Object Purpose
+
+The error object is the sole interface between Stamp and downstream systems (including CRI-CORE). It encodes structural validity, repair semantics, and provenance impact without embedding governance interpretation.
+
+### 5.2 Required Error Fields
+
+Each error MUST include the following fields:
+
+**Identity**
+- `code` — Stable, machine-readable error identifier (e.g. `ARI_SCHEMA_REQUIRED_FIELD_MISSING`)
+- `message` — Short human-readable summary
+
+**Classification**
+- `category` — One of:
+  - `STRUCTURAL`
+  - `SCHEMA`
+  - `PROVENANCE`
+  - `GOVERNANCE`
+- `severity` — One of:
+  - `INFO`
+  - `WARNING`
+  - `ERROR`
+  - `FATAL`
+
+**Repair Semantics**
+- `repairable` — boolean
+- `auto_fixable` — boolean
+- `requires_human_approval` — boolean
+
+**Scope**
+- `file_path` — Path of the affected artifact
+- `field_path` — JSON Pointer or dotted path to the affected field (nullable)
+- `schema_id` — `$id` of the schema used for validation
+
+**Provenance Impact**
+- `invalidates_artifact` — boolean
+- `invalidates_claim_state` — boolean
+
+**Traceability**
+- `source` — One of:
+  - `schema`
+  - `custom_rule`
+  - `normalizer`
+  - `fixer`
+- `stamp_version` — Stamp version emitting the error
+- `timestamp` — ISO-8601 timestamp of detection
+
+### 5.3 Stability Guarantees
+
+- Error object field names and meanings are **ABI-stable**
+- New optional fields MAY be added in MINOR versions
+- Required fields MUST NOT be removed or redefined without a MAJOR version bump
+- Error `code` values MUST remain stable once introduced
+
+### 5.4 Validator Responsibilities
+
+- JSON Schema validators MUST translate raw schema violations into canonical error objects
+- Validators MUST NOT invent governance semantics
+- Multiple raw validation failures MAY map to multiple error objects
+
+### 5.5 CRI-CORE Consumption
+
+CRI-CORE MUST treat Stamp error objects as authoritative structural diagnostics. CRI-CORE is responsible for all enforcement decisions, claim state transitions, and lifecycle semantics.
+
+Stamp MUST NOT perform enforcement actions beyond emitting errors conforming to this contract.
 
 ---
 
