@@ -1,30 +1,28 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
-
 [project]
-name = "waveframe-stamp"
+name = "stamp-core"
 version = "0.0.1"
-description = "Metadata validator and normalizer enforcing ARI governance standards."
+description = "Metadata validation and normalization engine for the Aurora ecosystem."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
-
 authors = [
   { name = "Shawn C. Wright", email = "swright@waveframelabs.org" }
 ]
-
 dependencies = [
-  "ruamel.yaml>=0.18.0",
-  "jsonschema>=4.17.0",
+  "ruamel.yaml>=0.17.32",
+  "jsonschema>=4.19.0",
+  "typer>=0.12.0",
   "click>=8.1.0"
 ]
 
-
-[project.scripts]
-stamp = "stamp.cli.main:main"
-
+[project.urls]
+Homepage = "https://waveframelabs.org"
+Source = "https://github.com/waveframe-labs/Waveframe-Stamp"
+Issues = "https://github.com/waveframe-labs/Waveframe-Stamp/issues"
 
 [project.optional-dependencies]
 dev = [
@@ -35,17 +33,8 @@ dev = [
     "mypy>=1.0.0"
 ]
 
-
-[project.urls]
-Homepage = "https://github.com/Waveframe-Labs/Waveframe-Stamp"
-Source = "https://github.com/Waveframe-Labs/Waveframe-Stamp"
-Issues = "https://github.com/Waveframe-Labs/Waveframe-Stamp/issues"
-Documentation = "https://waveframelabs.org"
-
-
-[tool.setuptools]
-package-dir = {"" = "src"}
-
+[project.scripts]
+stamp = "stamp.cli.main:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]
