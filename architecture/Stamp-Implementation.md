@@ -34,12 +34,6 @@ anchors:
 ---
 
 # Stamp Implementation Architecture
-version: 0.0.1
-status: Draft
-type: architecture-design
-domain: methodology
-
----
 
 ## 1. Overview
 
