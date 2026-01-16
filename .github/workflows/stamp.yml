@@ -1,61 +1,71 @@
 name: Run Stamp Metadata Validation
 
 on:
+  push:
+    branches: [ "main" ]
+  pull_request:
   workflow_dispatch:
     inputs:
       paths:
-        description: "Files to validate"
+        description: "Files or glob patterns to validate"
         required: false
         default: "**/*.md"
       mode:
-        description: "Validation mode (check/fix)"
+        description: "Validation mode (check or fix)"
         type: choice
         options:
           - check
           - fix
         default: "check"
       output_dir:
-        description: "Optional output directory"
+        description: "Optional directory to write normalized files"
         required: false
-  pull_request:
-  push:
-    branches: [ "main" ]
 
 jobs:
   stamp:
-    name: Run Stamp Validator
+    name: Stamp Metadata Validation
     runs-on: ubuntu-latest
 
     steps:
+      # ---------------------------------------------------------------
+      # CHECKOUT REPO
+      # ---------------------------------------------------------------
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
+      # ---------------------------------------------------------------
+      # PYTHON SETUP
+      # ---------------------------------------------------------------
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
+      # ---------------------------------------------------------------
+      # INSTALL STAMP FROM THE REPO
+      # ---------------------------------------------------------------
       - name: Install Stamp
-        # NOTE: Change this to 'pip install stamp-core' for production use in other repos
         run: |
           python -m pip install --upgrade pip
           pip install -e .
 
+      # ---------------------------------------------------------------
+      # DETERMINE MODE + PATHS
+      # ---------------------------------------------------------------
       - name: Configure Execution Parameters
         id: config
-        shell: bash
         run: |
-          # Default to 'check' and all markdown files for Push/PR
           MODE="--check"
           PATHS="**/*.md"
           OUTDIR=""
 
-          # Override if this is a manual dispatch
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             if [[ "${{ inputs.mode }}" == "fix" ]]; then
               MODE="--fix"
             fi
-            
+
             if [[ -n "${{ inputs.paths }}" ]]; then
               PATHS="${{ inputs.paths }}"
             fi
@@ -68,45 +78,48 @@ jobs:
           echo "MODE=$MODE" >> $GITHUB_OUTPUT
           echo "PATHS=$PATHS" >> $GITHUB_OUTPUT
           echo "OUTDIR=$OUTDIR" >> $GITHUB_OUTPUT
-          
-          echo "::notice::Running Stamp with mode: $MODE on paths: $PATHS"
 
+      # ---------------------------------------------------------------
+      # RUN STAMP VALIDATION
+      # ---------------------------------------------------------------
       - name: Run Stamp
         id: stamp_run
-        # We allow error here to handle the exit codes manually in the next step
         continue-on-error: true
         run: |
-          # Using redirection > for report as per Spec 5.8
           stamp ${{ steps.config.outputs.MODE }} \
                 ${{ steps.config.outputs.OUTDIR }} \
                 "${{ steps.config.outputs.PATHS }}" \
                 --json > stamp_report.json
-          
-          # Capture the actual exit code of the stamp command
+
           echo "EXIT_CODE=$?" >> $GITHUB_OUTPUT
 
+      # ---------------------------------------------------------------
+      # UPLOAD REPORT AS ARTIFACT
+      # ---------------------------------------------------------------
       - name: Upload Validation Report
         uses: actions/upload-artifact@v4
         with:
           name: stamp-validation-report
           path: stamp_report.json
 
-      - name: Process Verification Results
+      # ---------------------------------------------------------------
+      # PROCESS STATUS + FAIL PIPELINE IF NEEDED
+      # ---------------------------------------------------------------
+      - name: Process Results
         if: always()
         run: |
           CODE=${{ steps.stamp_run.outputs.EXIT_CODE }}
-          
+
           if [[ "$CODE" == "0" ]]; then
-            echo "✅ Stamp Verification Passed."
+            echo "✅ Metadata validation passed."
             exit 0
           elif [[ "$CODE" == "1" ]]; then
             echo "⚠️ Repairable metadata issues detected."
-            echo "Run 'stamp --fix' locally or re-run this workflow in 'fix' mode."
-            # We fail the CI pipeline on code 1 so the user knows they must fix it
+            echo "Run workflow_dispatch in 'fix' mode to auto-correct."
             exit 1
           elif [[ "$CODE" == "2" ]]; then
-            echo "❌ FATAL: Non-compliant metadata detected."
-            echo "These errors cannot be auto-repaired. Check the report."
+            echo "❌ FATAL: Noncompliant metadata detected."
+            echo "Check stamp_report.json for error details."
             exit 2
           else
             echo "❓ Unknown error occurred."
