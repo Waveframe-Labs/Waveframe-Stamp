@@ -256,6 +256,8 @@ Stamp performs metadata validation by applying the ARI Metadata Schema (JSON Sch
 
 Stamp MUST NOT expose raw JSON Schema error output directly to users or downstream systems.
 
+---
+
 ### 7.1 Validation Phases
 
 Schema-based validation occurs in two strictly ordered phases:
@@ -280,75 +282,101 @@ Only translated Stamp error objects may propagate beyond the validation layer.
 
 ---
 
-### 7.2 Canonical Error Classification Rules
+### 7.2 Canonical Error Object (Normative Contract)
 
-Each JSON Schema validation failure MUST be mapped to exactly one Stamp error object with the following classification dimensions:
+Every translated error MUST include the following fields:
 
-#### Severity Mapping
+#### Identity
+- `error_id`: stable, machine-readable identifier
+- `rule_id`: stable identifier for the rule violated  
+  (e.g., `ari-3.0.2.required.title`, `jsonschema:required:title`)
+- `schema_id`: `$id` of the schema used for validation
+- `source`: `"schema"` or `"custom_rule"`
 
-| Schema Failure Type                                | Stamp Severity |
-|---------------------------------------------------|----------------|
-| Unknown or additional property                    | FATAL          |
-| Invalid enum value                                | FATAL          |
-| Invalid regex or format                           | FATAL          |
-| Missing required field                            | ERROR          |
-| Conditional requirement violation                 | ERROR          |
-| Forbidden field present                           | ERROR          |
+#### Classification
+- `category`: one of  
+  `STRUCTURAL`, `SCHEMA`, `PROVENANCE`, `GOVERNANCE`
+- `severity`: one of  
+  `INFO`, `WARNING`, `ERROR`, `FATAL`
 
-Severity indicates whether validation may continue and whether the artifact may be considered structurally valid.
+#### Repair Semantics
+- `repairable`: boolean (mechanically correctable without semantic inference)
+- `auto_fixable`: boolean (Stamp can fix deterministically)
+- `requires_user_consent`: boolean (any mutation requires explicit user opt-in)
+- `requires_human_approval`: boolean (governance or authority gating required)
 
----
+#### Scope
+- `file_path`
+- `field_path` (JSON Pointer)
+- `schema_version`
 
-#### Repairability Mapping
+#### Structured Payloads
+- `details`: machine-parseable payload  
+  (e.g., `expected`, `actual`, `allowed_values`, `missing_fields`, `pattern`)
+- `context` (optional): auxiliary structured data  
+  (e.g., line numbers if available, excerpt hash)
 
-Stamp MUST classify repairability conservatively:
+#### Provenance Impact
+- `invalidates_artifact`: boolean
+- `invalidates_claim_state`: boolean
 
-| Condition                                           | Repairable |
-|----------------------------------------------------|------------|
-| Missing deterministically defaultable fields        | true       |
-| Formatting or ordering violations                   | true       |
-| Forbidden field that can be safely removed          | true       |
-| Missing semantically meaningful content             | false      |
-| Enum or pattern violations                          | false      |
-| Invalid identifiers (DOI, ORCID, version)           | false      |
+#### Traceability
+- `timestamp`
+- `tool_version`
 
-Stamp MUST NOT fabricate semantic data under any circumstance.
-
----
-
-### 7.3 Provenance and Enforcement Semantics
-
-Each translated error MUST explicitly declare its provenance and enforcement implications:
-
-- `source`: always `"schema"` for this phase
-- `invalidates_artifact`: true for FATAL errors
-- `invalidates_claim_state`: true for FATAL errors
-- `requires_human_approval`: true for all non-repairable errors
-
-CRI-CORE MUST be able to determine enforcement actions solely from the translated error objects without re-evaluating the schema.
+This error object constitutes a stable contract. Downstream systems MUST NOT rely on raw schema error formats.
 
 ---
 
-### 7.4 Aggregation and Priority Rules
+### 7.3 Severity and Repairability Mapping (Schema-Originated Errors)
+
+Schema validation failures MUST be classified according to the following rules:
+
+| Schema Failure Type                      | Severity | Repairable | Auto-fixable |
+|-----------------------------------------|----------|------------|--------------|
+| Invalid YAML / unparsable metadata       | FATAL    | false      | false        |
+| Unknown or additional property           | ERROR    | true       | true         |
+| Missing required field                  | ERROR    | conditional| conditional  |
+| Conditional requirement violation       | ERROR    | false      | false        |
+| Invalid enum value                      | FATAL    | false      | false        |
+| Invalid regex or format                 | FATAL    | false      | false        |
+
+FATAL errors represent conditions where Stamp cannot proceed safely.  
+ERROR-level violations may allow fix-mode preflight if repairable.
+
+---
+
+### 7.4 Repair and Consent Rules
+
+Stamp MUST enforce the following constraints:
+
+1. No mutation may occur unless `requires_user_consent = true` has been explicitly satisfied.
+2. `auto_fixable = true` indicates Stamp can perform the fix deterministically.
+3. `requires_human_approval = true` indicates governance or authority approval is required and MUST be enforced by CRI-CORE.
+4. No fixes MAY occur if any FATAL errors exist.
+5. Repairable ERROR-level violations MAY be fixed when explicitly authorized.
+
+---
+
+### 7.5 Aggregation and Priority Rules
 
 When multiple schema validation failures occur:
 
 1. All failures MUST be collected and translated.
 2. The highest-severity error determines the overall validation outcome.
-3. No normalization or fixing MAY occur if any FATAL errors exist.
-4. Repairable errors MAY be normalized only after explicit user approval.
-
-Error ordering in reports MUST be stable and deterministic.
+3. FATAL errors block all normalization and fixing.
+4. ERROR-level violations may proceed to fix-mode preflight if repairable.
+5. Error ordering in reports MUST be stable and deterministic.
 
 ---
 
-### 7.5 Stability and Contract Guarantees
+### 7.6 Stability and Contract Guarantees
 
-The schema-to-error translation rules defined in this section constitute a stable contract.
+The schema-to-error translation rules defined in this section constitute a stable ABI-level contract.
 
-- Implementations MAY change internal validation libraries.
-- Implementations MUST NOT change error classification semantics without a MAJOR version increment.
-- CRI-CORE and other downstream systems may rely on this contract as an ABI-level interface.
+- Implementations MAY change validation libraries.
+- Implementations MUST NOT change error semantics without a MAJOR version increment.
+- CRI-CORE MAY rely exclusively on these error objects for enforcement decisions.
 
 This guarantees long-term interoperability across tooling layers.
 
