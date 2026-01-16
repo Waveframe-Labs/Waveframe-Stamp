@@ -380,6 +380,52 @@ The schema-to-error translation rules defined in this section constitute a stabl
 
 This guarantees long-term interoperability across tooling layers.
 
+## 7.7 JSON Schema → Stamp Error Translation Mapping (Normative)
+
+This section defines the authoritative mapping from JSON Schema validation failures to Stamp canonical error objects.
+This mapping is normative and MUST be followed by all Stamp implementations.
+
+Stamp MUST translate each JSON Schema validation failure into exactly one Stamp error object according to the rules below.
+Stamp MUST NOT emit raw JSON Schema errors beyond the validation boundary.
+
+---
+
+### 7.7.1 Mapping Table
+
+JSON Schema Failure Condition | JSON Schema Keyword / Signal | Stamp rule_id Pattern | Category | Severity | Repairable | Auto-fixable | Requires User Consent | Requires Human Approval | Invalidates Artifact | Invalidates Claim State | Required details payload
+--- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---
+Metadata block missing | pre-schema | stamp.metadata.missing | STRUCTURAL | FATAL | false | false | false | true | true | true | reason
+YAML unparsable | parser failure | stamp.metadata.yaml_unparsable | STRUCTURAL | FATAL | false | false | false | true | true | true | error
+Invalid YAML root type | type | ari.<ver>.type.invalid_root | SCHEMA | FATAL | false | false | false | true | true | true | expected, actual
+Missing required field | required | ari.<ver>.required.<field> | SCHEMA | ERROR | conditional | conditional | true | false | false | false | missing_field
+Forbidden field present | not / required | ari.<ver>.forbidden.<field> | SCHEMA | ERROR | true | true | true | false | false | false | field
+Conditional requirement violation | if / then / allOf | ari.<ver>.conditional.<field> | SCHEMA | ERROR | false | false | true | true | false | false | condition, field
+Unknown / additional property | additionalProperties | ari.<ver>.additional.<field> | SCHEMA | ERROR | true | true | true | false | false | false | field
+Invalid enum value | enum | ari.<ver>.enum.<field> | SCHEMA | FATAL | false | false | false | true | true | true | field, allowed, actual
+Regex or pattern violation | pattern | ari.<ver>.pattern.<field> | SCHEMA | FATAL | false | false | false | true | true | true | field, pattern, actual
+Invalid format | format | ari.<ver>.format.<field> | SCHEMA | FATAL | false | false | false | true | true | true | field, format, actual
+Invalid dependency path | pattern | ari.<ver>.dependency.invalid_path | SCHEMA | ERROR | false | false | true | true | false | false | path
+Empty required array | custom rule | ari.<ver>.array.empty.<field> | SCHEMA | ERROR | false | false | true | true | false | false | field
+
+---
+
+### 7.7.2 Binding Translation Rules (Normative)
+
+1. One failure MUST produce exactly one error object.
+2. No semantic inference beyond schema and this table is permitted.
+3. FATAL errors halt all normalization and fixing.
+4. Repairability MUST be conservative and deterministic.
+5. User consent and human approval are distinct and MUST NOT be conflated.
+6. Schema identity MUST propagate in every error object.
+7. Error ordering MUST be deterministic by severity, path, and rule_id.
+
+---
+
+### 7.7.3 CRI-CORE Reliance Guarantee
+
+CRI-CORE may rely exclusively on error objects produced under this mapping for enforcement decisions.
+CRI-CORE MUST NOT re-evaluate JSON Schema rules directly.
+
 ---
 
 ## 8. GitHub Action Wrapper
