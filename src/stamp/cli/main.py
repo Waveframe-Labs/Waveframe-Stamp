@@ -1,155 +1,117 @@
-#!/usr/bin/env python3
+# File: src/stamp/cli/main.py
 
-"""
-Stamp CLI
----------
-Primary command-line entrypoint for the Stamp metadata validation tool.
+from __future__ import annotations
 
-Implements the CLI contract defined in Stamp-Spec.md Section 5.8.
-Routes files into the loader → parser → validator → normalizer → reporter pipeline.
-
-This is a scaffold file — logic is not implemented yet.
-"""
-
-import argparse
-import sys
+import json
 import glob
-import os
-from typing import List
+import sys
+from pathlib import Path
+from typing import List, Optional
 
-# Engine stubs (to be implemented later)
-from stamp.engine.loader import Loader
-from stamp.engine.parser import Parser
-from stamp.engine.validator import Validator
-from stamp.engine.normalizer import Normalizer
-from stamp.engine.reporter import Reporter
+import click
+
+from stamp.engine.controller import StampController
 
 
-def expand_file_list(paths: List[str]) -> List[str]:
+@click.command()
+@click.argument(
+    "paths",
+    nargs=-1,
+    required=False,
+)
+@click.option(
+    "--check",
+    "mode",
+    flag_value="check",
+    default=True,
+    help="Validate metadata without modifying files.",
+)
+@click.option(
+    "--fix",
+    "mode",
+    flag_value="fix",
+    help="Validate and normalize metadata, rewriting files or writing to output directory.",
+)
+@click.option(
+    "--output-dir",
+    type=click.Path(file_okay=False, dir_okay=True, writable=True),
+    default=None,
+    help="Write normalized files to this directory instead of modifying originals.",
+)
+@click.option(
+    "--json",
+    "json_output",
+    is_flag=True,
+    help="Output machine-readable JSON report to STDOUT.",
+)
+def cli(paths: List[str], mode: str, output_dir: Optional[str], json_output: bool):
     """
-    Expand file patterns and return a unique list of .md files.
+    Stamp CLI
+    ----------
+    Validates, normalizes, and reports on metadata compliance for Markdown files
+    according to the Aurora Metadata Policy & Schema.
 
-    Safety Guard:
-    - Defaults to matching only .md files to avoid modifying LICENSE,
-      CSV files, binary assets, or other non-governed files.
+    USAGE:
+
+        stamp --check "**/*.md"
+        stamp --fix docs/**/*.md --output-dir fixed/
+        stamp --check file.md --json
+
     """
-    expanded = []
-    for p in paths:
-        for match in glob.glob(p, recursive=True):
-            if match.endswith(".md") and os.path.isfile(match):
-                expanded.append(match)
-    return list(set(expanded))
 
+    controller = StampController()
 
-def parse_args():
-    parser = argparse.ArgumentParser(
-        description="Stamp — Metadata Validator and Normalizer"
+    # Handle default path pattern
+    if not paths:
+        paths = ["**/*.md"]
+
+    # Expand glob patterns into file list
+    expanded: List[str] = []
+    for pattern in paths:
+        expanded.extend(glob.glob(pattern, recursive=True))
+
+    if not expanded:
+        click.echo("No matching files found.", err=True)
+        sys.exit(0)
+
+    # Process files through the controller
+    results = controller.process_files(
+        expanded,
+        mode=mode,
+        output_dir=output_dir,
     )
 
-    parser.add_argument(
-        "paths",
-        nargs="+",
-        help="Files or glob patterns to process (e.g., '*.md').",
-    )
+    # JSON output case
+    if json_output:
+        click.echo(json.dumps(results, indent=2))
+        exit_code = _highest_exit_code(results)
+        sys.exit(exit_code)
 
-    parser.add_argument(
-        "--check",
-        action="store_true",
-        help="Validate only. Do not modify files."
-    )
+    # Human-readable output
+    for path, report in results.items():
+        status = report["status"]
+        click.echo(f"{path}: {status.upper()}")
 
-    parser.add_argument(
-        "--fix",
-        action="store_true",
-        help="Validate and apply deterministic fixes in-place."
-    )
-
-    parser.add_argument(
-        "--output-dir",
-        type=str,
-        default=None,
-        help="Write normalized files to this directory instead of overwriting source."
-    )
-
-    parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Output machine-readable report to stdout."
-    )
-
-    return parser.parse_args()
+    exit_code = _highest_exit_code(results)
+    sys.exit(exit_code)
 
 
-def main():
-    args = parse_args()
+def _highest_exit_code(results: dict) -> int:
+    """
+    Compute Stamp exit code from per-file results.
+    Highest exit code always wins:
 
-    if args.check and args.fix:
-        print("ERROR: --check and --fix cannot be used together.", file=sys.stderr)
-        sys.exit(2)
-
-    files = expand_file_list(args.paths)
-
-    if not files:
-        print("No markdown files found matching input patterns.", file=sys.stderr)
-        sys.exit(2)
-
-    loader = Loader()
-    parser = Parser()
-    validator = Validator(schema={})   # schema vendoring applied later
-    normalizer = Normalizer()
-    reporter = Reporter()
-
-    highest_exit_code = 0
-
-    for path in files:
-        # TODO: Actual engine logic not implemented yet
-        try:
-            content = loader.load_file(path)
-            metadata, body, had_meta = parser.extract_metadata_block(content)
-            results = validator.validate(metadata)
-
-            fatal = len(results.get("fatal_errors", [])) > 0
-            repairable = len(results.get("repairable_errors", [])) > 0
-
-            # Determine action
-            if fatal:
-                highest_exit_code = max(highest_exit_code, 2)
-
-            elif repairable:
-                if args.fix:
-                    # TODO: apply normalization
-                    # TODO: reassemble file
-                    # TODO: write in-place or to output_dir
-                    highest_exit_code = max(highest_exit_code, 1)
-                else:
-                    # check-only mode sees repairable errors as exit 1
-                    highest_exit_code = max(highest_exit_code, 1)
-
-            else:
-                # clean pass
-                highest_exit_code = max(highest_exit_code, 0)
-
-            # TODO: compute hashes
-            original_hash = "TODO"
-            rewritten_hash = None
-
-            report = reporter.build_report(
-                path=path,
-                original_hash=original_hash,
-                rewritten_hash=rewritten_hash,
-                results=results
-            )
-
-            if args.json:
-                import json
-                print(json.dumps(report, indent=2))
-
-        except Exception as e:
-            print(f"Unexpected error processing {path}: {e}", file=sys.stderr)
-            highest_exit_code = max(highest_exit_code, 2)
-
-    sys.exit(highest_exit_code)
+        2 = fatal error (fail)
+        1 = repairable error
+        0 = clean or warnings only
+    """
+    highest = 0
+    for report in results.values():
+        code = report.get("exit_code", 0)
+        if code > highest:
+            highest = code
+    return highest
 
 
 if __name__ == "__main__":
-    main()
+    cli()
