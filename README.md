@@ -199,7 +199,27 @@ By keeping these concerns separate, Stamp remains:
 - and adaptable.
 
 ---
+## Citation
+
+If you use **Stamp** in academic work, tooling research, or technical documentation, please cite it as follows.
+
+### BibTeX
+
+```bibtex
+@software{stamp_2026,
+  title        = {Stamp: A Schema-Agnostic Structural Diagnostics Engine},
+  author       = {Wright, Shawn C.},
+  year         = {2026},
+  version      = {0.0.1},
+  publisher    = {Waveframe Labs},
+  url          = {https://github.com/waveframelabs/stamp},
+  doi          = {TBD}
+}
+```
+
 **Stamp is developed and maintained by Waveframe Labs under internal governance standards.**  
+
+---  
 
 <div align="center">
   <sub>© 2026 Waveframe Labs</sub>
