@@ -1,0 +1,44 @@
+{
+  "contract": {
+    "name": "Stamp Canonical Diagnostic Fixtures",
+    "version": "1.0.0",
+    "cdo_schema_uri": "https://waveframelabs.org/schemas/stamp-cdo-v1.json"
+  },
+  "cases": [
+    {
+      "id": "case_001_required_missing_simple",
+      "description": "Validates that a missing required property at the root level emits a deterministic required.missing error.",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["license"],
+        "properties": {
+          "license": { "type": "string" }
+        }
+      },
+      "instance": {
+        "title": "Missing License Example"
+      },
+      "expected_diagnostics": [
+        {
+          "id": "required.missing",
+          "severity": "error",
+          "schema_keyword": "required",
+          "instance_path": "",
+          "schema_path": "/required",
+          "message": "Required property 'license' is missing.",
+          "details": {
+            "missing_property": "license"
+          },
+          "fix": null,
+          "provenance": {
+            "timestamp": "2026-01-01T00:00:00Z",
+            "stamp_version": "0.0.0-fixture",
+            "schema_version": "fixture-v1",
+            "validator_engine": "fixture-mock"
+          }
+        }
+      ]
+    }
+  ]
+}
