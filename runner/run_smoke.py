@@ -8,13 +8,17 @@ from stamp.schema import ResolvedSchema
 def run() -> None:
     print("🔥 Running Stamp smoke test...\n")
 
-    # Simulated artifact content
+    # ----------------------------
+    # Simulated artifact
+    # ----------------------------
     artifact = {
         "title": "Example",
         "internal_id": 123
     }
 
+    # ----------------------------
     # Simulated schema
+    # ----------------------------
     schema = {
         "$id": "urn:example:schema",
         "type": "object",
@@ -24,21 +28,29 @@ def run() -> None:
         "additionalProperties": False
     }
 
-    # ---- Extraction layer (explicit, no shortcuts) ----
+    # ----------------------------
+    # Extraction layer
+    # ----------------------------
     extracted = ExtractedMetadata(
         artifact_path=Path("example.json"),
         metadata=artifact,
-        raw_block=artifact,   # In real use, this would be the parsed metadata block
-        error=None,           # Explicitly declare extraction succeeded
+        raw_block=artifact,
+        error=None,
     )
 
-    # ---- Schema resolution layer ----
+    # ----------------------------
+    # Schema resolution layer
+    # ----------------------------
     resolved_schema = ResolvedSchema(
         identifier=schema["$id"],
         schema=schema,
+        source="inline",                  # provenance label
+        uri="urn:example:schema",          # canonical schema reference
     )
 
-    # ---- Validation orchestration ----
+    # ----------------------------
+    # Validation orchestration
+    # ----------------------------
     result = validate_artifact(
         extracted=extracted,
         resolved_schema=resolved_schema,
