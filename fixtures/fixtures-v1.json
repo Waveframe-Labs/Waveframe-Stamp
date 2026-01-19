@@ -39,6 +39,60 @@
           }
         }
       ]
+    },
+    {
+      "id": "case_002_required_missing_multiple",
+      "description": "Validates that multiple missing required properties emit one required.missing diagnostic per field.",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["license", "version"],
+        "properties": {
+          "license": { "type": "string" },
+          "version": { "type": "string" }
+        }
+      },
+      "instance": {
+        "title": "Missing Multiple Required Fields Example"
+      },
+      "expected_diagnostics": [
+        {
+          "id": "required.missing",
+          "severity": "error",
+          "schema_keyword": "required",
+          "instance_path": "",
+          "schema_path": "/required",
+          "message": "Required property 'license' is missing.",
+          "details": {
+            "missing_property": "license"
+          },
+          "fix": null,
+          "provenance": {
+            "timestamp": "2026-01-01T00:00:00Z",
+            "stamp_version": "0.0.0-fixture",
+            "schema_version": "fixture-v1",
+            "validator_engine": "fixture-mock"
+          }
+        },
+        {
+          "id": "required.missing",
+          "severity": "error",
+          "schema_keyword": "required",
+          "instance_path": "",
+          "schema_path": "/required",
+          "message": "Required property 'version' is missing.",
+          "details": {
+            "missing_property": "version"
+          },
+          "fix": null,
+          "provenance": {
+            "timestamp": "2026-01-01T00:00:00Z",
+            "stamp_version": "0.0.0-fixture",
+            "schema_version": "fixture-v1",
+            "validator_engine": "fixture-mock"
+          }
+        }
+      ]
     }
   ]
 }
