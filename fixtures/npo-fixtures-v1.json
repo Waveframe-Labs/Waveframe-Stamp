@@ -1,0 +1,206 @@
+{
+  "contract": {
+    "name": "Stamp Normalization Proposal Logic Fixtures",
+    "version": "1.0.0",
+    "npo_schema_uri": "https://waveframelabs.org/schemas/stamp-npo-v1.json",
+    "description": "Defines the mapping from CDOs (Facts) to NPO Proposals (Claims). Tests classification, action derivation, and epistemic boundaries."
+  },
+  "cases": [
+    {
+      "id": "npo_001_mechanical_prune",
+      "description": "Scenario A: A strictly forbidden property triggers a mechanical prune proposal. Provenance: Derived directly from CDO fix semantics.",
+      "input": {
+        "source_artifact": {
+          "path": "docs/metadata.json",
+          "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "schema_context": {
+          "id": "ari-metadata-3.0.2",
+          "uri": "https://waveframelabs.org/schemas/ari-metadata-3.0.2.json"
+        },
+        "diagnostics": [
+          {
+            "id": "object.no_additional_properties",
+            "severity": "error",
+            "schema_keyword": "additionalProperties",
+            "instance_path": "",
+            "schema_path": "/additionalProperties",
+            "message": "Property 'internal_id' is not allowed.",
+            "details": {
+              "property": "internal_id"
+            },
+            "fix": {
+              "fixable": true,
+              "strategy": "prune",
+              "parameters": {
+                "key": "internal_id"
+              }
+            },
+            "provenance": {
+              "timestamp": "2026-01-01T00:00:00Z",
+              "stamp_version": "0.1.0",
+              "schema_version": "draft-2020-12",
+              "validator_engine": "stamp-core"
+            }
+          }
+        ]
+      },
+      "expected_summary": {
+        "total_proposals": 1,
+        "requires_approval_count": 0,
+        "by_classification": {
+          "mechanical": 1,
+          "inferred": 0,
+          "ambiguous": 0,
+          "prohibited": 0
+        }
+      },
+      "expected_proposals": [
+        {
+          "id": "4b7e2c1f6a8d9e1b0f4c8a2e7b9d5a3c6e8f1b2a4d9c0e7f6a5b3c2d1e9",
+          "diagnostic_id": "object.no_additional_properties",
+          "target": {
+            "instance_path": "",
+            "schema_path": "/additionalProperties"
+          },
+          "action": "remove",
+          "current_value": 123,
+          "proposed_value": null,
+          "classification": "mechanical",
+          "basis": "schema_strictness",
+          "confidence": "high",
+          "requires_approval": false,
+          "prohibited": false,
+          "notes": "Removing field explicitly forbidden by schema."
+        }
+      ]
+    },
+    {
+      "id": "npo_002_inferred_enum_casing",
+      "description": "Scenario B: A casing mismatch triggers an inferred replacement proposal. Provenance: Case-normalization heuristic.",
+      "input": {
+        "source_artifact": {
+          "path": "docs/metadata.json",
+          "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "schema_context": {
+          "id": "ari-metadata-3.0.2",
+          "uri": "https://waveframelabs.org/schemas/ari-metadata-3.0.2.json"
+        },
+        "diagnostics": [
+          {
+            "id": "enum.invalid",
+            "severity": "error",
+            "schema_keyword": "enum",
+            "instance_path": "/status",
+            "schema_path": "/properties/status/enum",
+            "message": "Value is not allowed.",
+            "details": {
+              "allowed_values": ["draft", "active"],
+              "value": "Draft"
+            },
+            "fix": null,
+            "provenance": {
+              "timestamp": "2026-01-01T00:00:00Z",
+              "stamp_version": "0.1.0",
+              "schema_version": "draft-2020-12",
+              "validator_engine": "stamp-core"
+            }
+          }
+        ]
+      },
+      "expected_summary": {
+        "total_proposals": 1,
+        "requires_approval_count": 1,
+        "by_classification": {
+          "mechanical": 0,
+          "inferred": 1,
+          "ambiguous": 0,
+          "prohibited": 0
+        }
+      },
+      "expected_proposals": [
+        {
+          "id": "9c1f7b3a4e2d8f6c0a5b9e7d1c3f4a2e6b8d0f5c7a9e1b2d4f6c8a3",
+          "diagnostic_id": "enum.invalid",
+          "target": {
+            "instance_path": "/status",
+            "schema_path": "/properties/status/enum"
+          },
+          "action": "replace",
+          "current_value": "Draft",
+          "proposed_value": "draft",
+          "classification": "inferred",
+          "basis": "case_normalization",
+          "confidence": "high",
+          "requires_approval": true,
+          "prohibited": false,
+          "notes": "Value matches allowed enum 'draft' via case-insensitive comparison."
+        }
+      ]
+    },
+    {
+      "id": "npo_003_prohibited_missing_license",
+      "description": "Scenario C: A missing license triggers a prohibited negative claim. Provenance: Governance policy forbids inference.",
+      "input": {
+        "source_artifact": {
+          "path": "docs/metadata.json",
+          "hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "schema_context": {
+          "id": "ari-metadata-3.0.2",
+          "uri": "https://waveframelabs.org/schemas/ari-metadata-3.0.2.json"
+        },
+        "diagnostics": [
+          {
+            "id": "required.missing",
+            "severity": "error",
+            "schema_keyword": "required",
+            "instance_path": "",
+            "schema_path": "/required",
+            "message": "Required property 'license' is missing.",
+            "details": {
+              "missing_property": "license"
+            },
+            "fix": null,
+            "provenance": {
+              "timestamp": "2026-01-01T00:00:00Z",
+              "stamp_version": "0.1.0",
+              "schema_version": "draft-2020-12",
+              "validator_engine": "stamp-core"
+            }
+          }
+        ]
+      },
+      "expected_summary": {
+        "total_proposals": 1,
+        "requires_approval_count": 1,
+        "by_classification": {
+          "mechanical": 0,
+          "inferred": 0,
+          "ambiguous": 0,
+          "prohibited": 1
+        }
+      },
+      "expected_proposals": [
+        {
+          "id": "e8f3c2a7d9b1f4e6a5c8d0b9f2e7c1a4d6b8f0e3c9a7b5d1f4e6a2",
+          "diagnostic_id": "required.missing",
+          "target": {
+            "instance_path": "",
+            "schema_path": "/required"
+          },
+          "action": "add",
+          "current_value": null,
+          "proposed_value": null,
+          "classification": "prohibited",
+          "basis": "policy_constraint",
+          "confidence": "high",
+          "requires_approval": true,
+          "prohibited": true,
+          "notes": "Automated license assignment is explicitly prohibited by governance policy."
+        }
+      ]
+    }
+  ]
+}
