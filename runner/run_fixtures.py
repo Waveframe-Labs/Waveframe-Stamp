@@ -123,6 +123,59 @@ def stamp_validate(schema: dict, instance: dict) -> list[dict]:
                         }
                     })
 
+    # ----------------------------
+    # type (root level properties)
+    # ----------------------------
+    if (
+        schema.get("type") == "object"
+        and isinstance(schema.get("properties"), dict)
+        and isinstance(instance, dict)
+    ):
+        for prop, prop_schema in schema["properties"].items():
+            if (
+                prop in instance
+                and isinstance(prop_schema, dict)
+                and "type" in prop_schema
+            ):
+                expected = prop_schema["type"]
+                value = instance[prop]
+
+                type_ok = False
+                if expected == "string":
+                    type_ok = isinstance(value, str)
+                elif expected == "number":
+                    type_ok = isinstance(value, (int, float)) and not isinstance(value, bool)
+                elif expected == "integer":
+                    type_ok = isinstance(value, int) and not isinstance(value, bool)
+                elif expected == "boolean":
+                    type_ok = isinstance(value, bool)
+                elif expected == "object":
+                    type_ok = isinstance(value, dict)
+                elif expected == "array":
+                    type_ok = isinstance(value, list)
+
+                if not type_ok:
+                    diagnostics.append({
+                        "id": "type.mismatch",
+                        "severity": "error",
+                        "schema_keyword": "type",
+                        "instance_path": f"/{prop}",
+                        "schema_path": f"/properties/{prop}/type",
+                        "message": "Value does not match the expected type.",
+                        "details": {
+                            "expected_type": expected,
+                            "actual_type": type(value).__name__,
+                            "value": value
+                        },
+                        "fix": None,
+                        "provenance": {
+                            "timestamp": "2026-01-01T00:00:00Z",
+                            "stamp_version": "0.1.0-dev",
+                            "schema_version": "draft-2020-12",
+                            "validator_engine": "stamp-core"
+                        }
+                    })
+
     return diagnostics
 
 # ----------------------------
