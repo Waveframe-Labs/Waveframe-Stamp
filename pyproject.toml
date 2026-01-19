@@ -10,8 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 
 # License intentionally unspecified pending governance decision
-# SPDX-compliant placeholder
-license = "NOASSERTION"
+license = { text = "NOASSERTION" }
 
 authors = [
   { name = "Shawn C. Wright", email = "swright@waveframelabs.org" }
