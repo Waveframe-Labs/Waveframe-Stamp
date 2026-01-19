@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Optional
 
 import typer
 
@@ -15,19 +14,38 @@ app = typer.Typer(add_completion=False)
 
 @app.command("validate")
 def validate(
-    artifact: Path = typer.Argument(..., exists=True, readable=True),
-    schema: Path = typer.Option(..., "--schema", exists=True, readable=True),
-    format: str = typer.Option("json", "--format", help="json | pretty"),
+    artifact: Path = typer.Argument(
+        ...,
+        exists=True,
+        readable=True,
+        help="Artifact file to validate",
+    ),
+    schema: Path = typer.Option(
+        ...,
+        "--schema",
+        exists=True,
+        readable=True,
+        help="JSON Schema file",
+    ),
+    format: str = typer.Option(
+        "json",
+        "--format",
+        help="Output format: json | pretty",
+    ),
 ) -> None:
     """
     Validate an artifact against a JSON Schema and emit Canonical Diagnostic Objects.
     """
+    if format not in {"json", "pretty"}:
+        typer.echo("Invalid format. Use 'json' or 'pretty'.", err=True)
+        raise typer.Exit(code=2)
+
     extracted = extract_metadata(artifact)
     resolved_schema = load_schema(schema)
 
     result = validate_artifact(
         extracted=extracted,
-        resolved_schema=load_schema,
+        resolved_schema=resolved_schema,
     )
 
     diagnostics = result.diagnostics
@@ -38,5 +56,6 @@ def validate(
     else:
         typer.echo(json.dumps(diagnostics))
 
+    # Non-zero exit if any diagnostics were emitted
     if diagnostics:
         raise typer.Exit(code=1)
