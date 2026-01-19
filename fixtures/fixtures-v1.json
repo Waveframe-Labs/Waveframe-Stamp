@@ -93,6 +93,48 @@
           }
         }
       ]
+    },
+    {
+      "id": "case_003_additional_properties_forbidden",
+      "description": "Validates that an extra property is rejected when additionalProperties is false and emits a mechanical prune fix.",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "license": { "type": "string" }
+        }
+      },
+      "instance": {
+        "license": "Apache-2.0",
+        "internal_id": "abc123"
+      },
+      "expected_diagnostics": [
+        {
+          "id": "object.no_additional_properties",
+          "severity": "error",
+          "schema_keyword": "additionalProperties",
+          "instance_path": "",
+          "schema_path": "/additionalProperties",
+          "message": "Property 'internal_id' is not allowed.",
+          "details": {
+            "property": "internal_id"
+          },
+          "fix": {
+            "fixable": true,
+            "strategy": "prune",
+            "parameters": {
+              "key": "internal_id"
+            }
+          },
+          "provenance": {
+            "timestamp": "2026-01-01T00:00:00Z",
+            "stamp_version": "0.0.0-fixture",
+            "schema_version": "fixture-v1",
+            "validator_engine": "fixture-mock"
+          }
+        }
+      ]
     }
   ]
 }
