@@ -39,9 +39,10 @@ def validate_artifact(
     raw_errors = _validate_instance(instance, resolved_schema.schema)
 
     diagnostics = translate_validation_errors_to_cdos(
-        errors=raw_errors,
-        instance=instance,
-    )
+    errors=raw_errors,
+    instance=instance,
+    schema=resolved_schema.schema,
+)
 
     return ValidationResult(
         artifact_path=extracted.artifact_path,
