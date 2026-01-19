@@ -57,7 +57,7 @@
       },
       "expected_proposals": [
         {
-          "id": "4b7e2c1f6a8d9e1b0f4c8a2e7b9d5a3c6e8f1b2a4d9c0e7f6a5b3c2d1e9",
+          "id": "24bd6fc33df8384453865c4ff5646807407802dac0fb5e28b5c1acdfbe6d9ad5",  
           "diagnostic_id": "object.no_additional_properties",
           "target": {
             "instance_path": "",
