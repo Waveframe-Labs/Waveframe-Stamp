@@ -16,7 +16,7 @@ def run():
         "properties": {
             "title": {"type": "string"}
         },
-        "additionalProperties": false
+        "additionalProperties": False  
     }
 
     # --- Minimal artifact (intentionally invalid) ---
