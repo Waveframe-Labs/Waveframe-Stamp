@@ -5,6 +5,18 @@ from typing import Any, Dict, List
 from jsonschema.exceptions import ValidationError
 
 
+# --- Canonical Diagnostic ID Mapping (ABI) -----------------------------
+
+_CANONICAL_ID_MAP: Dict[str, str] = {
+    "additionalProperties": "object.no_additional_properties",
+    "required": "required.missing",
+    "enum": "enum.invalid",
+    "type": "type.mismatch",
+}
+
+
+# --- Public API --------------------------------------------------------
+
 def translate_validation_errors_to_cdos(
     *,
     errors: List[ValidationError],
@@ -23,8 +35,8 @@ def translate_validation_errors_to_cdos(
             "id": _map_error_to_id(error),
             "severity": "error",
             "schema_keyword": error.validator,
-            "instance_path": "/" + "/".join(str(p) for p in error.path),
-            "schema_path": "/" + "/".join(str(p) for p in error.schema_path),
+            "instance_path": _format_path(error.path),
+            "schema_path": _format_path(error.schema_path),
             "message": error.message,
             "details": _extract_details(error),
             "fix": _infer_fix_capability(error),
@@ -35,11 +47,25 @@ def translate_validation_errors_to_cdos(
     return diagnostics
 
 
+# --- Internals ---------------------------------------------------------
+
 def _map_error_to_id(error: ValidationError) -> str:
     """
-    Map a jsonschema validator keyword to a stable diagnostic ID.
+    Map a jsonschema validator keyword to a stable, semantic diagnostic ID.
     """
-    return f"{error.validator}.violation"
+    return _CANONICAL_ID_MAP.get(
+        error.validator,
+        f"{error.validator}.violation",
+    )
+
+
+def _format_path(path: Any) -> str:
+    """
+    Convert a jsonschema path iterator into a JSON Pointer–like string.
+    """
+    if not path:
+        return ""
+    return "/" + "/".join(str(p) for p in path)
 
 
 def _extract_details(error: ValidationError) -> Dict[str, Any]:
@@ -49,13 +75,16 @@ def _extract_details(error: ValidationError) -> Dict[str, Any]:
     details: Dict[str, Any] = {}
 
     if error.validator == "required":
-        details["missing_property"] = error.message.split("'")[1]
+        # Message format: "'field' is a required property"
+        parts = error.message.split("'")
+        if len(parts) >= 2:
+            details["missing_property"] = parts[1]
 
-    if error.validator == "enum":
+    elif error.validator == "enum":
         details["allowed_values"] = error.validator_value
         details["value"] = error.instance
 
-    if error.validator == "type":
+    elif error.validator == "type":
         details["expected_type"] = error.validator_value
         details["actual_type"] = type(error.instance).__name__
         details["value"] = error.instance
@@ -69,12 +98,16 @@ def _infer_fix_capability(error: ValidationError) -> Any:
     This is intentionally conservative.
     """
     if error.validator == "additionalProperties":
+        # Message format: "Additional properties are not allowed ('foo' was unexpected)"
+        parts = error.message.split("'")
+        key = parts[1] if len(parts) >= 2 else None
+
         return {
             "fixable": True,
             "strategy": "prune",
             "parameters": {
-                "key": error.message.split("'")[1]
-            }
+                "key": key,
+            },
         }
 
     return None
