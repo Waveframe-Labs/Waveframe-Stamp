@@ -5,12 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "stamp-core"
 version = "0.0.1"
-description = "Schema-agnostic structural diagnostics and normalization engine."
+description = "Schema-agnostic structural diagnostics engine."
 readme = "README.md"
 requires-python = ">=3.10"
 
-# License intentionally NOASSERTION until governance decision is finalized
-license = { text = "NOASSERTION" }
+# License intentionally unspecified pending governance decision
+# SPDX-compliant placeholder
+license = "NOASSERTION"
 
 authors = [
   { name = "Shawn C. Wright", email = "swright@waveframelabs.org" }
