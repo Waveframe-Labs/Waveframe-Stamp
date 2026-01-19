@@ -135,6 +135,44 @@
           }
         }
       ]
+    },
+    {
+      "id": "case_004_enum_mismatch",
+      "description": "Validates that enum violations emit a diagnostic with no fix, even when allowed values are known.",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["Draft", "Final"]
+          }
+        }
+      },
+      "instance": {
+        "status": "draft"
+      },
+      "expected_diagnostics": [
+        {
+          "id": "enum.mismatch",
+          "severity": "error",
+          "schema_keyword": "enum",
+          "instance_path": "/status",
+          "schema_path": "/properties/status/enum",
+          "message": "Value is not one of the allowed enum values.",
+          "details": {
+            "allowed_values": ["Draft", "Final"],
+            "value": "draft"
+          },
+          "fix": null,
+          "provenance": {
+            "timestamp": "2026-01-01T00:00:00Z",
+            "stamp_version": "0.0.0-fixture",
+            "schema_version": "fixture-v1",
+            "validator_engine": "fixture-mock"
+          }
+        }
+      ]
     }
   ]
 }
