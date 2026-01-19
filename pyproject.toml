@@ -37,7 +37,7 @@ dev = [
 ]
 
 [project.scripts]
-stamp = "stamp.cli:cli"
+stamp = "stamp.cli.main:main"  
 
 # Flat-layout package discovery (stamp/ at repo root)
 [tool.setuptools.packages.find]
