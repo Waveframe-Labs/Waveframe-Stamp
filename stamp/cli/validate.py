@@ -7,7 +7,7 @@ from typing import Optional
 import typer
 
 from stamp.extract import extract_metadata
-from stamp.schema import resolve_schema
+from stamp.schema import load_schema
 from stamp.validate import validate_artifact
 
 app = typer.Typer(add_completion=False)
@@ -23,11 +23,11 @@ def validate(
     Validate an artifact against a JSON Schema and emit Canonical Diagnostic Objects.
     """
     extracted = extract_metadata(artifact)
-    resolved_schema = resolve_schema(schema)
+    resolved_schema = load_schema(schema)
 
     result = validate_artifact(
         extracted=extracted,
-        resolved_schema=resolved_schema,
+        resolved_schema=load_schema,
     )
 
     diagnostics = result.diagnostics
