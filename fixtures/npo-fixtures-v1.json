@@ -121,7 +121,7 @@
       },
       "expected_proposals": [
         {
-          "id": "9c1f7b3a4e2d8f6c0a5b9e7d1c3f4a2e6b8d0f5c7a9e1b2d4f6c8a3",
+          "id": "10cf2f01310c1081b26d819ec4bb3dd9d41023ade3fec5caf8e8b81e1e25ac46",  
           "diagnostic_id": "enum.invalid",
           "target": {
             "instance_path": "/status",
