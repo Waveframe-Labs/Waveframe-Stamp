@@ -5,18 +5,20 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "stamp-core"
 version = "0.0.1"
-description = "Metadata validation and normalization engine for the Aurora ecosystem."
+description = "Schema-agnostic structural diagnostics and normalization engine."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "Apache-2.0" }
+
+# License intentionally TBD until governance decision is finalized
+license = { text = "TBD" }
+
 authors = [
   { name = "Shawn C. Wright", email = "swright@waveframelabs.org" }
 ]
+
 dependencies = [
   "ruamel.yaml>=0.17.32",
-  "jsonschema>=4.19.0",
-  "typer>=0.12.0",
-  "click>=8.1.0"
+  "jsonschema>=4.19.0"
 ]
 
 [project.urls]
@@ -26,15 +28,14 @@ Issues = "https://github.com/waveframe-labs/Waveframe-Stamp/issues"
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "black>=23.0.0",
-    "isort>=5.0.0",
-    "mypy>=1.0.0"
+  "pytest>=7.0.0",
+  "pytest-cov>=4.0.0",
+  "black>=23.0.0",
+  "isort>=5.0.0",
+  "mypy>=1.0.0"
 ]
 
-[project.scripts]
-stamp = "stamp.cli.main:cli"
-
+# Flat-layout package discovery (stamp/ at repo root)
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["."]
+include = ["stamp*"]
