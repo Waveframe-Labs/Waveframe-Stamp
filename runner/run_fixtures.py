@@ -20,15 +20,35 @@ CDO_SCHEMA_PATH = ROOT / "schemas" / "cdo-v1.schema.json"
 # ----------------------------
 
 def stamp_validate(schema: dict, instance: dict) -> list[dict]:
-    """
-    Core Stamp validation entrypoint.
+    diagnostics = []
 
-    For now, this is a stub.
-    It must return a list of Canonical Diagnostic Objects (CDOs).
+    # Handle only root-level "required" for now
+    required_fields = schema.get("required", [])
+    if not isinstance(required_fields, list):
+        return diagnostics
 
-    Implementation will come next.
-    """
-    raise NotImplementedError("stamp_validate is not implemented yet")
+    for field in required_fields:
+        if field not in instance:
+            diagnostics.append({
+                "id": "required.missing",
+                "severity": "error",
+                "schema_keyword": "required",
+                "instance_path": "",
+                "schema_path": "/required",
+                "message": f"Required property '{field}' is missing.",
+                "details": {
+                    "missing_property": field
+                },
+                "fix": None,
+                "provenance": {
+                    "timestamp": "2026-01-01T00:00:00Z",
+                    "stamp_version": "0.1.0-dev",
+                    "schema_version": "draft-2020-12",
+                    "validator_engine": "stamp-core"
+                }
+            })
+
+    return diagnostics
 
 
 # ----------------------------
