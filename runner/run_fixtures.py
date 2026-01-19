@@ -16,40 +16,76 @@ CDO_SCHEMA_PATH = ROOT / "schemas" / "cdo-v1.schema.json"
 
 
 # ----------------------------
-# Stamp Core (stub)
+# Stamp Core 
 # ----------------------------
 
 def stamp_validate(schema: dict, instance: dict) -> list[dict]:
     diagnostics = []
 
-    # Handle only root-level "required" for now
+    # ----------------------------
+    # required (root level only)
+    # ----------------------------
     required_fields = schema.get("required", [])
-    if not isinstance(required_fields, list):
-        return diagnostics
+    if isinstance(required_fields, list):
+        for field in required_fields:
+            if field not in instance:
+                diagnostics.append({
+                    "id": "required.missing",
+                    "severity": "error",
+                    "schema_keyword": "required",
+                    "instance_path": "",
+                    "schema_path": "/required",
+                    "message": f"Required property '{field}' is missing.",
+                    "details": {
+                        "missing_property": field
+                    },
+                    "fix": None,
+                    "provenance": {
+                        "timestamp": "2026-01-01T00:00:00Z",
+                        "stamp_version": "0.1.0-dev",
+                        "schema_version": "draft-2020-12",
+                        "validator_engine": "stamp-core"
+                    }
+                })
 
-    for field in required_fields:
-        if field not in instance:
-            diagnostics.append({
-                "id": "required.missing",
-                "severity": "error",
-                "schema_keyword": "required",
-                "instance_path": "",
-                "schema_path": "/required",
-                "message": f"Required property '{field}' is missing.",
-                "details": {
-                    "missing_property": field
-                },
-                "fix": None,
-                "provenance": {
-                    "timestamp": "2026-01-01T00:00:00Z",
-                    "stamp_version": "0.1.0-dev",
-                    "schema_version": "draft-2020-12",
-                    "validator_engine": "stamp-core"
-                }
-            })
+    # ---------------------------------------
+    # additionalProperties (root level only)
+    # ---------------------------------------
+    if (
+        schema.get("type") == "object"
+        and schema.get("additionalProperties") is False
+        and isinstance(instance, dict)
+    ):
+        allowed_keys = set(schema.get("properties", {}).keys())
+
+        for key in instance.keys():
+            if key not in allowed_keys:
+                diagnostics.append({
+                    "id": "object.no_additional_properties",
+                    "severity": "error",
+                    "schema_keyword": "additionalProperties",
+                    "instance_path": "",
+                    "schema_path": "/additionalProperties",
+                    "message": f"Property '{key}' is not allowed.",
+                    "details": {
+                        "property": key
+                    },
+                    "fix": {
+                        "fixable": True,
+                        "strategy": "prune",
+                        "parameters": {
+                            "key": key
+                        }
+                    },
+                    "provenance": {
+                        "timestamp": "2026-01-01T00:00:00Z",
+                        "stamp_version": "0.1.0-dev",
+                        "schema_version": "draft-2020-12",
+                        "validator_engine": "stamp-core"
+                    }
+                })
 
     return diagnostics
-
 
 # ----------------------------
 # Utility functions
