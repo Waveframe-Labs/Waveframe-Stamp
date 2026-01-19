@@ -85,6 +85,44 @@ def stamp_validate(schema: dict, instance: dict) -> list[dict]:
                     }
                 })
 
+    # ----------------------------
+    # enum (root level properties)
+    # ----------------------------
+    if (
+        schema.get("type") == "object"
+        and isinstance(schema.get("properties"), dict)
+        and isinstance(instance, dict)
+    ):
+        for prop, prop_schema in schema["properties"].items():
+            if (
+                prop in instance
+                and isinstance(prop_schema, dict)
+                and "enum" in prop_schema
+            ):
+                allowed = prop_schema["enum"]
+                value = instance[prop]
+
+                if value not in allowed:
+                    diagnostics.append({
+                        "id": "enum.mismatch",
+                        "severity": "error",
+                        "schema_keyword": "enum",
+                        "instance_path": f"/{prop}",
+                        "schema_path": f"/properties/{prop}/enum",
+                        "message": "Value is not one of the allowed enum values.",
+                        "details": {
+                            "allowed_values": allowed,
+                            "value": value
+                        },
+                        "fix": None,
+                        "provenance": {
+                            "timestamp": "2026-01-01T00:00:00Z",
+                            "stamp_version": "0.1.0-dev",
+                            "schema_version": "draft-2020-12",
+                            "validator_engine": "stamp-core"
+                        }
+                    })
+
     return diagnostics
 
 # ----------------------------
