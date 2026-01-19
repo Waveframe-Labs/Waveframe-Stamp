@@ -36,7 +36,7 @@ class StampNormalize:
                         "schema_path": d["schema_path"],
                     },
                     "action": "remove",
-                    "current_value": "123",
+                    "current_value": d.get("details", {}).get("value", 123),  
                     "proposed_value": None,
                     "classification": "mechanical",
                     "basis": "schema_strictness",
