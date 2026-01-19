@@ -28,24 +28,27 @@ def _validate_instance(instance: Any, schema: Dict[str, Any]) -> List[Any]:
 
 def validate_artifact(
     *,
-    artifact: Any,
-    schema: Dict[str, Any],
-    schema_id: str,
-    artifact_path: Optional[Path] = None,
+    extracted: ExtractedMetadata,
+    resolved_schema: ResolvedSchema,
 ) -> ValidationResult:
     """
-    Validate an artifact against a JSON Schema and emit Canonical Diagnostic Objects (CDOs).
-
-    This is the primary public validation entrypoint for Stamp.
-    Extraction, schema resolution, and enforcement are handled elsewhere.
+    Validate extracted metadata against a resolved schema and emit CDO diagnostics.
     """
-    raw_errors = _validate_instance(artifact, schema)
+    instance = extracted.metadata
+
+    raw_errors = _validate_instance(instance, resolved_schema.schema)
 
     diagnostics = translate_validation_errors_to_cdos(
         errors=raw_errors,
-        schema=schema,
-        instance=artifact,
+        instance=instance,
     )
+
+    return ValidationResult(
+        artifact_path=extracted.artifact_path,
+        schema_id=resolved_schema.identifier,
+        diagnostics=diagnostics,
+    )
+
 
     return ValidationResult(
         artifact_path=artifact_path,
