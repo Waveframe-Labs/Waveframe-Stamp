@@ -1,44 +1,48 @@
-import json
+from stamp.validate import validate_artifact
+from stamp.extract import ExtractedMetadata
+from stamp.schema import ResolvedSchema
+
 from pathlib import Path
 
-from stamp.validate import validate_artifact
 
-
-def run():
+def run() -> None:
     print("🔥 Running Stamp smoke test...\n")
 
-    # --- Minimal schema ---
+    artifact = {
+        "title": "Example",
+        "internal_id": 123
+    }
+
     schema = {
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "urn:smoke:schema",
+        "$id": "urn:example:schema",
         "type": "object",
-        "required": ["title"],
         "properties": {
             "title": {"type": "string"}
         },
-        "additionalProperties": False  
+        "additionalProperties": False
     }
 
-    # --- Minimal artifact (intentionally invalid) ---
-    artifact = {
-        "unexpected": "boom"
-    }
-
-    diagnostics = validate_artifact(
-        artifact=artifact,
-        schema=schema,
-        schema_id=schema["$id"]
+    extracted = ExtractedMetadata(
+        artifact_path=Path("example.json"),
+        metadata=artifact,
     )
 
-    # --- Assertions (manual, explicit) ---
-    if not diagnostics:
-        raise RuntimeError("Smoke test FAILED: No diagnostics returned")
+    resolved_schema = ResolvedSchema(
+        identifier=schema["$id"],
+        schema=schema,
+    )
+
+    result = validate_artifact(
+        extracted=extracted,
+        resolved_schema=resolved_schema,
+    )
 
     print("Diagnostics emitted:\n")
-    for d in diagnostics:
-        print(json.dumps(d, indent=2))
 
-    print("\n✅ Smoke test PASSED")
+    for d in result.diagnostics:
+        print(d)
+
+    print("\n✅ Smoke test passed.")
 
 
 if __name__ == "__main__":
