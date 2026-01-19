@@ -184,7 +184,7 @@
       },
       "expected_proposals": [
         {
-          "id": "e8f3c2a7d9b1f4e6a5c8d0b9f2e7c1a4d6b8f0e3c9a7b5d1f4e6a2",
+          "id": "b7d21ae0a296c473d61a3b4666198b93338510549fe09c560e0117cac0ddcbc3",  
           "diagnostic_id": "required.missing",
           "target": {
             "instance_path": "",
@@ -198,7 +198,7 @@
           "confidence": "high",
           "requires_approval": true,
           "prohibited": true,
-          "notes": "Automated license assignment is explicitly prohibited by governance policy."
+          "notes": "Automated assignment is prohibited by governance policy."
         }
       ]
     }
