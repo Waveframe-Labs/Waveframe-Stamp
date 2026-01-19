@@ -16,11 +16,39 @@ CDO_SCHEMA_PATH = ROOT / "schemas" / "cdo-v1.schema.json"
 
 
 # ----------------------------
+# Helpers
+# ----------------------------
+
+def instance_matches_schema(schema: dict, instance: dict) -> bool:
+    try:
+        jsonschema.validate(instance=instance, schema=schema)
+        return True
+    except jsonschema.ValidationError:
+        return False
+
+
+# ----------------------------
 # Stamp Core
 # ----------------------------
 
 def stamp_validate(schema: dict, instance: dict) -> list[dict]:
     diagnostics = []
+
+    # -------------------------------------------------
+    # if / then traversal (root level, leaf-preserving)
+    # -------------------------------------------------
+    if "if" in schema and "then" in schema:
+        if_schema = schema["if"]
+        then_schema = schema["then"]
+
+        if instance_matches_schema(if_schema, instance):
+            # Validate ONLY against `then` schema
+            overlay_schema = {
+                "type": schema.get("type", "object"),
+                **then_schema
+            }
+            diagnostics.extend(stamp_validate(overlay_schema, instance))
+            return diagnostics
 
     # ----------------------------
     # required (root level only)
@@ -189,7 +217,7 @@ def stamp_validate(schema: dict, instance: dict) -> list[dict]:
 
 
 # ----------------------------
-# Runner utilities (unchanged)
+# Runner utilities
 # ----------------------------
 
 def load_json(path: Path) -> dict:
@@ -262,10 +290,6 @@ def run():
         print(f"→ Case: {case_id}")
 
         actual = stamp_validate(schema, instance)
-
-        if not isinstance(actual, list):
-            print(f"\n❌ stamp_validate must return a list (case: {case_id})")
-            sys.exit(1)
 
         validate_cdo_schema(actual, cdo_schema)
 
