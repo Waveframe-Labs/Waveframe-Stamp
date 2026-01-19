@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://waveframelabs.org/schemas/stamp-npo-v1.json",
+  "title": "Stamp Normalization Proposal Object v1",
+  "description": "The immutable contract for normalization claims emitted by the Stamp engine. An NPO represents a set of potential changes, not an executed transaction.",
+  "type": "object",
+  "required": [
+    "npo_version",
+    "stamp_version",
+    "generated_at",
+    "source_artifact",
+    "schema_context",
+    "proposals",
+    "summary"
+  ],
+  "properties": {
+    "npo_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "stamp_version": {
+      "type": "string",
+      "description": "Version of the Stamp engine that generated this proposal."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_artifact": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": { "type": "string" },
+        "hash": { "type": "string", "description": "SHA-256 hash of the input artifact before normalization." }
+      }
+    },
+    "schema_context": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "uri": { "type": "string" }
+      }
+    },
+    "proposals": {
+      "type": "array",
+      "description": "A flat list of distinct proposed changes. One diagnostic may yield zero, one, or many proposals.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "diagnostic_id",
+          "target",
+          "action",
+          "classification",
+          "basis",
+          "confidence",
+          "requires_approval",
+          "prohibited"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "description": "Deterministic SHA-256 hash of (diagnostic_id + target.instance_path + action + canonical_json(proposed_value))."
+          },
+          "diagnostic_id": {
+            "type": "string",
+            "description": "Reference to the specific CDO 'id' that triggered this proposal."
+          },
+          "target": {
+            "type": "object",
+            "required": ["instance_path", "schema_path"],
+            "properties": {
+              "instance_path": { "type": "string" },
+              "schema_path": { "type": "string" }
+            }
+          },
+          "action": {
+            "type": "string",
+            "enum": ["add", "remove", "replace"],
+            "description": "The atomic operation required."
+          },
+          "current_value": {
+             "description": "The value currently at the target path (for verification).",
+             "deprecated": false
+          },
+          "proposed_value": {
+            "description": "The value to be written. May be any valid JSON type, including null or objects."
+          },
+          "classification": {
+            "type": "string",
+            "enum": ["mechanical", "inferred", "ambiguous", "prohibited"],
+            "description": "The epistemic category of the proposal."
+          },
+          "basis": {
+            "type": "string",
+            "enum": [
+              "schema_strictness",
+              "schema_default",
+              "schema_enum_singleton",
+              "case_normalization",
+              "repository_history",
+              "filename_convention",
+              "policy_constraint",
+              "manual_override"
+            ],
+            "description": "The reasoning source for the proposal."
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["high", "medium", "low"],
+            "description": "The engine's certainty level. Does not imply authority."
+          },
+          "requires_approval": {
+            "type": "boolean",
+            "description": "If true, this proposal MUST NOT be applied without explicit human or policy authorization."
+          },
+          "prohibited": {
+            "type": "boolean",
+            "description": "If true, this proposal is a 'negative claim' (stating that a fix is impossible or forbidden)."
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total_proposals", "requires_approval_count"],
+      "properties": {
+        "total_proposals": { "type": "integer", "minimum": 0 },
+        "requires_approval_count": { "type": "integer", "minimum": 0 },
+        "by_classification": {
+          "type": "object",
+          "properties": {
+            "mechanical": { "type": "integer" },
+            "inferred": { "type": "integer" },
+            "ambiguous": { "type": "integer" },
+            "prohibited": { "type": "integer" }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
