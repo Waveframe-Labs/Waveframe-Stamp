@@ -173,6 +173,44 @@
           }
         }
       ]
+    },
+    {
+      "id": "case_005_type_mismatch",
+      "description": "Validates that type mismatches emit a diagnostic with no fix and no coercion.",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "number"
+          }
+        }
+      },
+      "instance": {
+        "count": "5"
+      },
+      "expected_diagnostics": [
+        {
+          "id": "type.mismatch",
+          "severity": "error",
+          "schema_keyword": "type",
+          "instance_path": "/count",
+          "schema_path": "/properties/count/type",
+          "message": "Value does not match the expected type.",
+          "details": {
+            "expected_type": "number",
+            "actual_type": "string",
+            "value": "5"
+          },
+          "fix": null,
+          "provenance": {
+            "timestamp": "2026-01-01T00:00:00Z",
+            "stamp_version": "0.0.0-fixture",
+            "schema_version": "fixture-v1",
+            "validator_engine": "fixture-mock"
+          }
+        }
+      ]
     }
   ]
 }
