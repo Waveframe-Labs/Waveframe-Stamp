@@ -16,7 +16,7 @@ CDO_SCHEMA_PATH = ROOT / "schemas" / "cdo-v1.schema.json"
 
 
 # ----------------------------
-# Stamp Core 
+# Stamp Core
 # ----------------------------
 
 def stamp_validate(schema: dict, instance: dict) -> list[dict]:
@@ -126,6 +126,15 @@ def stamp_validate(schema: dict, instance: dict) -> list[dict]:
     # ----------------------------
     # type (root level properties)
     # ----------------------------
+    python_type_to_schema = {
+        str: "string",
+        int: "integer",
+        float: "number",
+        bool: "boolean",
+        dict: "object",
+        list: "array",
+    }
+
     if (
         schema.get("type") == "object"
         and isinstance(schema.get("properties"), dict)
@@ -164,7 +173,7 @@ def stamp_validate(schema: dict, instance: dict) -> list[dict]:
                         "message": "Value does not match the expected type.",
                         "details": {
                             "expected_type": expected,
-                            "actual_type": type(value).__name__,
+                            "actual_type": python_type_to_schema.get(type(value), type(value).__name__),
                             "value": value
                         },
                         "fix": None,
@@ -178,8 +187,9 @@ def stamp_validate(schema: dict, instance: dict) -> list[dict]:
 
     return diagnostics
 
+
 # ----------------------------
-# Utility functions
+# Runner utilities (unchanged)
 # ----------------------------
 
 def load_json(path: Path) -> dict:
@@ -251,25 +261,20 @@ def run():
 
         print(f"→ Case: {case_id}")
 
-        # Run Stamp
         actual = stamp_validate(schema, instance)
 
         if not isinstance(actual, list):
             print(f"\n❌ stamp_validate must return a list (case: {case_id})")
             sys.exit(1)
 
-        # Step 1: Validate CDO schema
         validate_cdo_schema(actual, cdo_schema)
 
-        # Step 2: Strip provenance for comparison
         actual_cmp = strip_provenance(actual)
         expected_cmp = strip_provenance(expected)
 
-        # Step 3: Deterministic ordering
         actual_cmp = sort_diagnostics(actual_cmp)
         expected_cmp = sort_diagnostics(expected_cmp)
 
-        # Step 4: Deep equality
         assert_equal(actual_cmp, expected_cmp, case_id)
 
         print(f"✓ Passed: {case_id}")
