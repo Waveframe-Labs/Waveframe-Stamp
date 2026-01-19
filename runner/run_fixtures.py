@@ -31,8 +31,11 @@ def instance_matches_schema(schema: dict, instance: dict) -> bool:
 # Stamp Core
 # ----------------------------
 
-def stamp_validate(schema: dict, instance: dict) -> list[dict]:
+def stamp_validate(schema: dict, instance: dict, schema_path_prefix: str = "") -> list[dict]:
     diagnostics = []
+
+    def prefixed(path: str) -> str:
+        return f"{schema_path_prefix}{path}"
 
     # -------------------------------------------------
     # if / then traversal (root level, leaf-preserving)
@@ -42,16 +45,17 @@ def stamp_validate(schema: dict, instance: dict) -> list[dict]:
         then_schema = schema["then"]
 
         if instance_matches_schema(if_schema, instance):
-            # Validate ONLY against `then` schema
-            overlay_schema = {
-                "type": schema.get("type", "object"),
-                **then_schema
-            }
-            diagnostics.extend(stamp_validate(overlay_schema, instance))
+            diagnostics.extend(
+                stamp_validate(
+                    then_schema,
+                    instance,
+                    schema_path_prefix=f"{schema_path_prefix}/then"
+                )
+            )
             return diagnostics
 
     # ----------------------------
-    # required (root level only)
+    # required
     # ----------------------------
     required_fields = schema.get("required", [])
     if isinstance(required_fields, list):
@@ -62,7 +66,7 @@ def stamp_validate(schema: dict, instance: dict) -> list[dict]:
                     "severity": "error",
                     "schema_keyword": "required",
                     "instance_path": "",
-                    "schema_path": "/required",
+                    "schema_path": prefixed("/required"),
                     "message": f"Required property '{field}' is missing.",
                     "details": {
                         "missing_property": field
@@ -77,7 +81,7 @@ def stamp_validate(schema: dict, instance: dict) -> list[dict]:
                 })
 
     # ---------------------------------------
-    # additionalProperties (root level only)
+    # additionalProperties
     # ---------------------------------------
     if (
         schema.get("type") == "object"
@@ -93,7 +97,7 @@ def stamp_validate(schema: dict, instance: dict) -> list[dict]:
                     "severity": "error",
                     "schema_keyword": "additionalProperties",
                     "instance_path": "",
-                    "schema_path": "/additionalProperties",
+                    "schema_path": prefixed("/additionalProperties"),
                     "message": f"Property '{key}' is not allowed.",
                     "details": {
                         "property": key
@@ -114,7 +118,7 @@ def stamp_validate(schema: dict, instance: dict) -> list[dict]:
                 })
 
     # ----------------------------
-    # enum (root level properties)
+    # enum
     # ----------------------------
     if (
         schema.get("type") == "object"
@@ -122,13 +126,9 @@ def stamp_validate(schema: dict, instance: dict) -> list[dict]:
         and isinstance(instance, dict)
     ):
         for prop, prop_schema in schema["properties"].items():
-            if (
-                prop in instance
-                and isinstance(prop_schema, dict)
-                and "enum" in prop_schema
-            ):
-                allowed = prop_schema["enum"]
+            if "enum" in prop_schema and prop in instance:
                 value = instance[prop]
+                allowed = prop_schema["enum"]
 
                 if value not in allowed:
                     diagnostics.append({
@@ -136,7 +136,7 @@ def stamp_validate(schema: dict, instance: dict) -> list[dict]:
                         "severity": "error",
                         "schema_keyword": "enum",
                         "instance_path": f"/{prop}",
-                        "schema_path": f"/properties/{prop}/enum",
+                        "schema_path": prefixed(f"/properties/{prop}/enum"),
                         "message": "Value is not one of the allowed enum values.",
                         "details": {
                             "allowed_values": allowed,
@@ -152,7 +152,7 @@ def stamp_validate(schema: dict, instance: dict) -> list[dict]:
                     })
 
     # ----------------------------
-    # type (root level properties)
+    # type
     # ----------------------------
     python_type_to_schema = {
         str: "string",
@@ -169,11 +169,7 @@ def stamp_validate(schema: dict, instance: dict) -> list[dict]:
         and isinstance(instance, dict)
     ):
         for prop, prop_schema in schema["properties"].items():
-            if (
-                prop in instance
-                and isinstance(prop_schema, dict)
-                and "type" in prop_schema
-            ):
+            if "type" in prop_schema and prop in instance:
                 expected = prop_schema["type"]
                 value = instance[prop]
 
@@ -197,7 +193,7 @@ def stamp_validate(schema: dict, instance: dict) -> list[dict]:
                         "severity": "error",
                         "schema_keyword": "type",
                         "instance_path": f"/{prop}",
-                        "schema_path": f"/properties/{prop}/type",
+                        "schema_path": prefixed(f"/properties/{prop}/type"),
                         "message": "Value does not match the expected type.",
                         "details": {
                             "expected_type": expected,
@@ -217,7 +213,7 @@ def stamp_validate(schema: dict, instance: dict) -> list[dict]:
 
 
 # ----------------------------
-# Runner utilities
+# Runner (unchanged)
 # ----------------------------
 
 def load_json(path: Path) -> dict:
@@ -228,7 +224,7 @@ def load_json(path: Path) -> dict:
 def validate_cdo_schema(diagnostics: list[dict], cdo_schema: dict):
     validator = jsonschema.Draft202012Validator(cdo_schema)
     for idx, diag in enumerate(diagnostics):
-        errors = sorted(validator.iter_errors(diag), key=lambda e: e.path)
+        errors = list(validator.iter_errors(diag))
         if errors:
             print(f"\n❌ CDO schema validation failed for diagnostic #{idx}")
             for err in errors:
@@ -237,71 +233,37 @@ def validate_cdo_schema(diagnostics: list[dict], cdo_schema: dict):
 
 
 def strip_provenance(diagnostics: list[dict]) -> list[dict]:
-    stripped = []
-    for diag in diagnostics:
-        d = deepcopy(diag)
-        d.pop("provenance", None)
-        stripped.append(d)
-    return stripped
+    return [{k: v for k, v in d.items() if k != "provenance"} for d in diagnostics]
 
 
 def sort_diagnostics(diagnostics: list[dict]) -> list[dict]:
-    return sorted(
-        diagnostics,
-        key=lambda d: (
-            d.get("instance_path", ""),
-            d.get("schema_keyword", ""),
-            d.get("id", ""),
-        ),
-    )
+    return sorted(diagnostics, key=lambda d: (d["instance_path"], d["schema_keyword"], d["id"]))
 
-
-def assert_equal(actual: list[dict], expected: list[dict], case_id: str):
-    if actual != expected:
-        print(f"\n❌ Fixture mismatch in case: {case_id}")
-        print("\nExpected:")
-        print(json.dumps(expected, indent=2))
-        print("\nActual:")
-        print(json.dumps(actual, indent=2))
-        sys.exit(1)
-
-
-# ----------------------------
-# Runner
-# ----------------------------
 
 def run():
     fixtures = load_json(FIXTURES_PATH)
     cdo_schema = load_json(CDO_SCHEMA_PATH)
 
-    cases = fixtures.get("cases", [])
-    if not cases:
-        print("⚠️ No fixture cases found.")
-        return
+    print(f"Running {len(fixtures['cases'])} fixture case(s)...")
 
-    print(f"Running {len(cases)} fixture case(s)...")
+    for case in fixtures["cases"]:
+        print(f"→ Case: {case['id']}")
 
-    for case in cases:
-        case_id = case["id"]
-        schema = case["schema"]
-        instance = case["instance"]
-        expected = case["expected_diagnostics"]
-
-        print(f"→ Case: {case_id}")
-
-        actual = stamp_validate(schema, instance)
-
+        actual = stamp_validate(case["schema"], case["instance"])
         validate_cdo_schema(actual, cdo_schema)
 
-        actual_cmp = strip_provenance(actual)
-        expected_cmp = strip_provenance(expected)
+        actual_cmp = sort_diagnostics(strip_provenance(actual))
+        expected_cmp = sort_diagnostics(strip_provenance(case["expected_diagnostics"]))
 
-        actual_cmp = sort_diagnostics(actual_cmp)
-        expected_cmp = sort_diagnostics(expected_cmp)
+        if actual_cmp != expected_cmp:
+            print("\n❌ Fixture mismatch in case:", case["id"])
+            print("\nExpected:")
+            print(json.dumps(expected_cmp, indent=2))
+            print("\nActual:")
+            print(json.dumps(actual_cmp, indent=2))
+            sys.exit(1)
 
-        assert_equal(actual_cmp, expected_cmp, case_id)
-
-        print(f"✓ Passed: {case_id}")
+        print(f"✓ Passed: {case['id']}")
 
     print("\n✅ All fixture cases passed.")
 
