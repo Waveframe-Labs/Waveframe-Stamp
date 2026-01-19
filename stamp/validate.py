@@ -6,17 +6,13 @@ from typing import Any, Dict, List, Optional
 
 from jsonschema import Draft202012Validator
 
-from stamp.extract import ExtractedMetadata
-from stamp.schema import ResolvedSchema
-
-# Import your existing CDO translation function(s).
-# Adjust the import to match what you actually named the module/function.
+# Canonical CDO translation
 from stamp.cdo import translate_validation_errors_to_cdos  # type: ignore
 
 
 @dataclass(frozen=True)
 class ValidationResult:
-    artifact_path: Path
+    artifact_path: Optional[Path]
     schema_id: str
     diagnostics: List[Dict[str, Any]]
 
@@ -31,26 +27,28 @@ def _validate_instance(instance: Any, schema: Dict[str, Any]) -> List[Any]:
 
 
 def validate_artifact(
-    extracted: ExtractedMetadata,
-    resolved_schema: ResolvedSchema,
+    *,
+    artifact: Any,
+    schema: Dict[str, Any],
+    schema_id: str,
+    artifact_path: Optional[Path] = None,
 ) -> ValidationResult:
     """
-    Validate extracted metadata against a resolved schema and emit CDO diagnostics.
-    """
-    # If there is no metadata block, validation still happens against `None`.
-    # The schema decides whether that's invalid (e.g., "type": "object").
-    instance = extracted.metadata
+    Validate an artifact against a JSON Schema and emit Canonical Diagnostic Objects (CDOs).
 
-    raw_errors = _validate_instance(instance, resolved_schema.schema)
+    This is the primary public validation entrypoint for Stamp.
+    Extraction, schema resolution, and enforcement are handled elsewhere.
+    """
+    raw_errors = _validate_instance(artifact, schema)
 
     diagnostics = translate_validation_errors_to_cdos(
         errors=raw_errors,
-        schema=resolved_schema.schema,
-        instance=instance,
+        schema=schema,
+        instance=artifact,
     )
 
     return ValidationResult(
-        artifact_path=extracted.artifact_path,
-        schema_id=resolved_schema.identifier,
+        artifact_path=artifact_path,
+        schema_id=schema_id,
         diagnostics=diagnostics,
     )
