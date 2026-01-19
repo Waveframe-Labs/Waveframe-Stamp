@@ -138,7 +138,7 @@
     },
     {
       "id": "case_004_enum_mismatch",
-      "description": "Validates that enum violations emit a diagnostic with no fix, even when allowed values are known.",
+      "description": "Validates that a value not present in an enum emits an enum.mismatch diagnostic.",
       "schema": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
@@ -150,7 +150,7 @@
         }
       },
       "instance": {
-        "status": "draft"
+        "status": "Pending"
       },
       "expected_diagnostics": [
         {
@@ -162,7 +162,7 @@
           "message": "Value is not one of the allowed enum values.",
           "details": {
             "allowed_values": ["Draft", "Final"],
-            "value": "draft"
+            "value": "Pending"
           },
           "fix": null,
           "provenance": {
@@ -176,7 +176,7 @@
     },
     {
       "id": "case_005_type_mismatch",
-      "description": "Validates that type mismatches emit a diagnostic with no fix and no coercion.",
+      "description": "Validates that a value with the wrong type emits a type.mismatch diagnostic.",
       "schema": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
@@ -201,6 +201,49 @@
             "expected_type": "number",
             "actual_type": "string",
             "value": "5"
+          },
+          "fix": null,
+          "provenance": {
+            "timestamp": "2026-01-01T00:00:00Z",
+            "stamp_version": "0.0.0-fixture",
+            "schema_version": "fixture-v1",
+            "validator_engine": "fixture-mock"
+          }
+        }
+      ]
+    },
+    {
+      "id": "case_006_conditional_required_if_then",
+      "description": "Validates that failures inside an if/then conditional emit the underlying leaf diagnostic rather than a structural error.",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "ai_assisted": { "type": "string" },
+          "ai_assistance_details": { "type": "string" }
+        },
+        "if": {
+          "properties": {
+            "ai_assisted": { "const": "partial" }
+          }
+        },
+        "then": {
+          "required": ["ai_assistance_details"]
+        }
+      },
+      "instance": {
+        "ai_assisted": "partial"
+      },
+      "expected_diagnostics": [
+        {
+          "id": "required.missing",
+          "severity": "error",
+          "schema_keyword": "required",
+          "instance_path": "",
+          "schema_path": "/then/required",
+          "message": "Required property 'ai_assistance_details' is missing.",
+          "details": {
+            "missing_property": "ai_assistance_details"
           },
           "fix": null,
           "provenance": {
