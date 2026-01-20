@@ -9,37 +9,15 @@ from stamp.extract import extract_metadata
 from stamp.schema import load_schema
 from stamp.validate import validate_artifact
 
-app = typer.Typer(add_completion=False)
+app = typer.Typer(add_completion=False, help="Validate artifacts against schemas.")
 
 
-@app.command("validate")
-def validate(
-    artifact: Path = typer.Argument(
-        ...,
-        exists=True,
-        readable=True,
-        help="Artifact file to validate",
-    ),
-    schema: Path = typer.Option(
-        ...,
-        "--schema",
-        exists=True,
-        readable=True,
-        help="JSON Schema file",
-    ),
-    format: str = typer.Option(
-        "json",
-        "--format",
-        help="Output format: json | pretty",
-    ),
+@app.command("run")
+def run(
+    artifact: Path = typer.Argument(..., exists=True, readable=True),
+    schema: Path = typer.Option(..., "--schema", exists=True, readable=True),
+    format: str = typer.Option("json", "--format", help="json | pretty"),
 ) -> None:
-    """
-    Validate an artifact against a JSON Schema and emit Canonical Diagnostic Objects.
-    """
-    if format not in {"json", "pretty"}:
-        typer.echo("Invalid format. Use 'json' or 'pretty'.", err=True)
-        raise typer.Exit(code=2)
-
     extracted = extract_metadata(artifact)
     resolved_schema = load_schema(schema)
 
@@ -56,6 +34,5 @@ def validate(
     else:
         typer.echo(json.dumps(diagnostics))
 
-    # Non-zero exit if any diagnostics were emitted
     if diagnostics:
         raise typer.Exit(code=1)
