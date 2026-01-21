@@ -1,107 +1,90 @@
-from pathlib import Path
-from dataclasses import dataclass
-from typing import Optional
-import json
+from __future__ import annotations
 
-try:
-    import yaml
-except ImportError:  # yaml is optional but strongly recommended
-    yaml = None
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Optional
+
+import ruamel.yaml
 
 
 @dataclass(frozen=True)
 class ExtractedMetadata:
     artifact_path: Path
-    metadata: Optional[dict]
+    metadata: Optional[Any]
     raw_block: Optional[str]
     error: Optional[str]
 
 
-def extract_metadata(artifact_path: Path) -> ExtractedMetadata:
+_yaml = ruamel.yaml.YAML(typ="safe")
+
+
+def extract_metadata(path: Path) -> ExtractedMetadata:
     """
-    Extract a metadata block from a file.
+    Extract metadata from an artifact.
 
-    Supports:
-    - Markdown with YAML front-matter
-    - JSON files where the root object is metadata
+    Currently supported:
+    - Markdown YAML frontmatter
 
-    This function does not validate content or apply schemas.
+    Returns metadata=None if no valid metadata block is present.
     """
-    try:
-        text = artifact_path.read_text(encoding="utf-8")
-    except Exception as e:
-        return ExtractedMetadata(
-            artifact_path=artifact_path,
-            metadata=None,
-            raw_block=None,
-            error=f"Failed to read file: {e}",
-        )
+    if path.suffix.lower() == ".md":
+        return _extract_markdown_frontmatter(path)
 
-    # Markdown front-matter
-    stripped = text.lstrip()
-    if stripped.startswith("---"):
-        parts = stripped.split("---", 2)
-        if len(parts) >= 3:
-            raw_block = parts[1].strip()
-            if yaml is None:
-                return ExtractedMetadata(
-                    artifact_path=artifact_path,
-                    metadata=None,
-                    raw_block=raw_block,
-                    error="PyYAML not installed",
-                )
-            try:
-                data = yaml.safe_load(raw_block)
-                if isinstance(data, dict):
-                    return ExtractedMetadata(
-                        artifact_path=artifact_path,
-                        metadata=data,
-                        raw_block=raw_block,
-                        error=None,
-                    )
-                return ExtractedMetadata(
-                    artifact_path=artifact_path,
-                    metadata=None,
-                    raw_block=raw_block,
-                    error="Metadata block is not a mapping",
-                )
-            except Exception as e:
-                return ExtractedMetadata(
-                    artifact_path=artifact_path,
-                    metadata=None,
-                    raw_block=raw_block,
-                    error=f"YAML parse error: {e}",
-                )
-
-    # JSON file
-    if artifact_path.suffix.lower() == ".json":
-        try:
-            data = json.loads(text)
-            if isinstance(data, dict):
-                return ExtractedMetadata(
-                    artifact_path=artifact_path,
-                    metadata=data,
-                    raw_block=text,
-                    error=None,
-                )
-            return ExtractedMetadata(
-                artifact_path=artifact_path,
-                metadata=None,
-                raw_block=text,
-                error="JSON root is not an object",
-            )
-        except Exception as e:
-            return ExtractedMetadata(
-                artifact_path=artifact_path,
-                metadata=None,
-                raw_block=text,
-                error=f"JSON parse error: {e}",
-            )
-
-    # No metadata detected
+    # Unsupported artifact types (for now)
     return ExtractedMetadata(
-        artifact_path=artifact_path,
+        artifact_path=path,
         metadata=None,
         raw_block=None,
         error=None,
+    )
+
+
+def _extract_markdown_frontmatter(path: Path) -> ExtractedMetadata:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except Exception as e:
+        return ExtractedMetadata(
+            artifact_path=path,
+            metadata=None,
+            raw_block=None,
+            error=str(e),
+        )
+
+    lines = text.splitlines()
+
+    if not lines or lines[0].strip() != "---":
+        return ExtractedMetadata(
+            artifact_path=path,
+            metadata=None,
+            raw_block=None,
+            error=None,
+        )
+
+    # Find closing delimiter
+    for i in range(1, len(lines)):
+        if lines[i].strip() == "---":
+            raw_block = "\n".join(lines[1:i])
+            try:
+                data = _yaml.load(raw_block)
+            except Exception as e:
+                return ExtractedMetadata(
+                    artifact_path=path,
+                    metadata=None,
+                    raw_block=raw_block,
+                    error=str(e),
+                )
+
+            return ExtractedMetadata(
+                artifact_path=path,
+                metadata=data,
+                raw_block=raw_block,
+                error=None,
+            )
+
+    # Opening delimiter with no close
+    return ExtractedMetadata(
+        artifact_path=path,
+        metadata=None,
+        raw_block=None,
+        error="Unterminated YAML frontmatter block",
     )
