@@ -14,10 +14,29 @@ app = typer.Typer(add_completion=False, help="Validate artifacts against schemas
 
 @app.command("run")
 def run(
-    artifact: Path = typer.Argument(..., exists=True, readable=True, help="Path to artifact file (e.g., .md)."),
-    schema: Path = typer.Option(..., "--schema", exists=True, readable=True, help="Path to JSON Schema (.json)."),
-    format: str = typer.Option("json", "--format", help="json | pretty"),
-    quiet: bool = typer.Option(False, "--quiet", help="Suppress success output when no violations are found."),
+    artifact: Path = typer.Argument(
+        ...,
+        exists=True,
+        readable=True,
+        help="Path to artifact file (e.g., Markdown with front matter).",
+    ),
+    schema: Path = typer.Option(
+        ...,
+        "--schema",
+        exists=True,
+        readable=True,
+        help="Path to JSON Schema (.json).",
+    ),
+    format: str = typer.Option(
+        "json",
+        "--format",
+        help="Output format: json | pretty",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        help="Suppress success output when no violations are found.",
+    ),
 ) -> None:
     """
     Validate an artifact against a JSON Schema and emit Canonical Diagnostic Objects (CDOs).
@@ -29,7 +48,12 @@ def run(
     extracted = extract_metadata(artifact)
     resolved_schema = load_schema(schema)
 
-    result = validate_artifact(extracted, resolved_schema)
+    # IMPORTANT: validate_artifact is keyword-only by design
+    result = validate_artifact(
+        extracted=extracted,
+        resolved_schema=resolved_schema,
+    )
+
     diagnostics = result.diagnostics
 
     if diagnostics:
@@ -42,4 +66,5 @@ def run(
 
     if not quiet:
         typer.echo("✅ Validation passed — no violations found.")
+
     raise typer.Exit(code=0)
