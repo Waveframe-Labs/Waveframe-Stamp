@@ -10,7 +10,10 @@ from stamp.schema import load_schema
 from stamp.validate import validate_artifact
 from stamp.fix import build_fix_proposals
 
-app = typer.Typer(add_completion=False, help="Validate artifacts against schemas.")
+app = typer.Typer(
+    add_completion=False,
+    help="Validate artifacts against schemas.",
+)
 
 
 @app.command("run")
@@ -64,7 +67,12 @@ def run(
     extracted = extract_metadata(artifact)
     resolved_schema = load_schema(schema)
 
-    result = validate_artifact(extracted, resolved_schema)
+    # IMPORTANT: keyword-only call (validate_artifact enforces this)
+    result = validate_artifact(
+        extracted=extracted,
+        resolved_schema=resolved_schema,
+    )
+
     diagnostics = result.diagnostics
     passed = len(diagnostics) == 0
 
