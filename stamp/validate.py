@@ -6,8 +6,9 @@ from typing import Any, Dict, List, Optional
 
 from jsonschema import Draft202012Validator
 
-# Canonical CDO translation
 from stamp.cdo import translate_validation_errors_to_cdos  # type: ignore
+from stamp.extract import ExtractedMetadata
+from stamp.schema import ResolvedSchema
 
 
 @dataclass(frozen=True)
@@ -32,27 +33,24 @@ def validate_artifact(
     resolved_schema: ResolvedSchema,
 ) -> ValidationResult:
     """
-    Validate extracted metadata against a resolved schema and emit CDO diagnostics.
+    Validate extracted metadata against a resolved schema and emit
+    Canonical Diagnostic Objects (CDOs).
     """
     instance = extracted.metadata
 
-    raw_errors = _validate_instance(instance, resolved_schema.schema)
+    raw_errors = _validate_instance(
+        instance=instance,
+        schema=resolved_schema.schema,
+    )
 
     diagnostics = translate_validation_errors_to_cdos(
-    errors=raw_errors,
-    instance=instance,
-    schema=resolved_schema.schema,
-)
+        errors=raw_errors,
+        instance=instance,
+        schema=resolved_schema.schema,
+    )
 
     return ValidationResult(
         artifact_path=extracted.artifact_path,
         schema_id=resolved_schema.identifier,
-        diagnostics=diagnostics,
-    )
-
-
-    return ValidationResult(
-        artifact_path=artifact_path,
-        schema_id=schema_id,
         diagnostics=diagnostics,
     )
