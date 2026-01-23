@@ -8,11 +8,9 @@ import typer
 from stamp.extract import extract_metadata
 from stamp.schema import load_schema
 from stamp.validate import validate_artifact
+from stamp.fix import build_fix_proposals
 
-app = typer.Typer(
-    add_completion=False,
-    help="Validate artifacts against schemas.",
-)
+app = typer.Typer(add_completion=False, help="Validate artifacts against schemas.")
 
 
 @app.command("run")
@@ -21,7 +19,7 @@ def run(
         ...,
         exists=True,
         readable=True,
-        help="Path to artifact file (e.g., Markdown with frontmatter).",
+        help="Path to artifact file (e.g., Markdown).",
     ),
     schema: Path = typer.Option(
         ...,
@@ -33,12 +31,17 @@ def run(
     format: str = typer.Option(
         "json",
         "--format",
-        help="Output format: json | pretty",
+        help="json | pretty",
     ),
     summary: bool = typer.Option(
         False,
         "--summary",
-        help="Emit a structured summary instead of raw diagnostics.",
+        help="Emit structured summary instead of raw diagnostics.",
+    ),
+    fix_proposals: bool = typer.Option(
+        False,
+        "--fix-proposals",
+        help="Emit fix proposals derived from diagnostics (no changes applied).",
     ),
     quiet: bool = typer.Option(
         False,
@@ -50,32 +53,47 @@ def run(
     Validate an artifact against a JSON Schema and emit Canonical Diagnostic Objects (CDOs).
 
     Exit codes:
-      - 0: validation passed
-      - 1: validation failed
+      - 0: no diagnostics
+      - 1: diagnostics present
+
+    Notes:
+      - This command never mutates artifacts.
+      - Fix proposals are descriptive only.
     """
+
     extracted = extract_metadata(artifact)
     resolved_schema = load_schema(schema)
 
-    # IMPORTANT: keyword-only call (matches validate_artifact contract)
-    result = validate_artifact(
-        extracted=extracted,
-        resolved_schema=resolved_schema,
-    )
-
+    result = validate_artifact(extracted, resolved_schema)
     diagnostics = result.diagnostics
     passed = len(diagnostics) == 0
 
-    if summary:
-        payload = {
-            "passed": passed,
-            "diagnostic_count": len(diagnostics),
-            "artifact": str(artifact),
-            "schema": str(schema),
-            "diagnostics": diagnostics,
-        }
-        typer.echo(json.dumps(payload, indent=2))
+    # --- Fix proposal mode ---
+    if fix_proposals:
+        proposals = build_fix_proposals(
+            diagnostics=diagnostics,
+            artifact=artifact,
+            schema=schema,
+        )
+        typer.echo(json.dumps(proposals, indent=2))
         raise typer.Exit(code=0 if passed else 1)
 
+    # --- Summary mode ---
+    if summary:
+        typer.echo(
+            json.dumps(
+                {
+                    "artifact": str(artifact),
+                    "schema": str(schema),
+                    "passed": passed,
+                    "diagnostic_count": len(diagnostics),
+                },
+                indent=2,
+            )
+        )
+        raise typer.Exit(code=0 if passed else 1)
+
+    # --- Default diagnostic output ---
     if diagnostics:
         if format == "pretty":
             for d in diagnostics:
