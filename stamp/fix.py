@@ -6,6 +6,43 @@ from typing import Any, Dict, List
 import yaml
 
 
+def build_fix_proposals(
+    *,
+    diagnostics: List[Dict[str, Any]],
+    artifact: Path,
+    schema: Path,
+) -> Dict[str, Any]:
+    """
+    Build descriptive fix proposals from validation diagnostics.
+
+    This function NEVER mutates artifacts.
+    It only explains what *could* be fixed mechanically.
+    """
+
+    proposals: List[Dict[str, Any]] = []
+
+    for d in diagnostics:
+        fix = d.get("fix")
+
+        proposals.append(
+            {
+                "rule_id": d.get("id", "unknown"),
+                "message": d.get("message"),
+                "path": d.get("instance_path", ""),
+                "severity": d.get("severity", "error"),
+                "auto_fixable": bool(fix and fix.get("fixable")),
+                "proposed_action": fix if fix else None,
+            }
+        )
+
+    return {
+        "artifact": str(artifact),
+        "schema": str(schema),
+        "proposal_count": len(proposals),
+        "proposals": proposals,
+    }
+
+
 def apply_fix_proposals(
     *,
     artifact: Path,
