@@ -8,6 +8,8 @@ import typer
 from stamp.extract import extract_metadata
 from stamp.schema import load_schema
 from stamp.validate import validate_artifact
+from stamp.fix import build_fix_proposals
+from stamp.remediation import build_remediation_summary
 
 app = typer.Typer(
     add_completion=False,
@@ -38,7 +40,17 @@ def run(
     summary: bool = typer.Option(
         False,
         "--summary",
-        help="Emit structured summary instead of raw diagnostics.",
+        help="Emit structured validation summary.",
+    ),
+    remediation: bool = typer.Option(
+        False,
+        "--remediation",
+        help="Emit human-action remediation summary.",
+    ),
+    fix_proposals: bool = typer.Option(
+        False,
+        "--fix-proposals",
+        help="Emit fix proposals derived from diagnostics (no changes applied).",
     ),
     quiet: bool = typer.Option(
         False,
@@ -55,7 +67,7 @@ def run(
 
     Notes:
       - This command never mutates artifacts.
-      - It performs observation only (no fixing, no normalization).
+      - Fix proposals and remediation summaries are descriptive only.
     """
 
     extracted = extract_metadata(artifact)
@@ -70,7 +82,27 @@ def run(
     diagnostics = result.diagnostics
     passed = len(diagnostics) == 0
 
-    # --- Summary mode ---
+    # --- Fix proposal mode ---
+    if fix_proposals:
+        proposals = build_fix_proposals(
+            diagnostics=diagnostics,
+            artifact=artifact,
+            schema=schema,
+        )
+        typer.echo(json.dumps(proposals, indent=2))
+        raise typer.Exit(code=0 if passed else 1)
+
+    # --- Remediation summary mode ---
+    if remediation:
+        remediation_summary = build_remediation_summary(
+            diagnostics=diagnostics,
+            artifact=artifact,
+            schema=schema,
+        )
+        typer.echo(json.dumps(remediation_summary, indent=2))
+        raise typer.Exit(code=0 if passed else 1)
+
+    # --- Validation summary mode ---
     if summary:
         typer.echo(
             json.dumps(
