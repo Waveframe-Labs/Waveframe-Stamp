@@ -31,6 +31,28 @@ def translate_validation_errors_to_cdos(
     diagnostics: List[Dict[str, Any]] = []
 
     for error in errors:
+        # --- Conditional normalization ---------------------------------
+        if _is_conditional_violation(error):
+            diagnostic = {
+                "id": "conditional.violation",
+                "severity": "error",
+                "schema_keyword": error.validator,
+                "instance_path": _format_path(error.path),
+                "schema_path": _format_path(error.schema_path),
+                "message": (
+                    "Conditional constraint violated: metadata state is incompatible "
+                    "with schema conditional logic."
+                ),
+                "details": {
+                    "condition": error.validator,
+                    "note": "See schema conditional (if/then/not) rules for resolution.",
+                },
+                "fix": None,
+            }
+            diagnostics.append(diagnostic)
+            continue
+
+        # --- Standard diagnostic path ----------------------------------
         diagnostic: Dict[str, Any] = {
             "id": _map_error_to_id(error),
             "severity": "error",
@@ -48,6 +70,18 @@ def translate_validation_errors_to_cdos(
 
 
 # --- Internals ---------------------------------------------------------
+
+def _is_conditional_violation(error: ValidationError) -> bool:
+    """
+    Detect violations originating from conditional schema logic
+    (if / then / else / not / allOf).
+    """
+    if error.validator == "not":
+        return True
+
+    schema_path = list(error.schema_path or [])
+    return "allOf" in schema_path or "then" in schema_path or "else" in schema_path
+
 
 def _map_error_to_id(error: ValidationError) -> str:
     """
