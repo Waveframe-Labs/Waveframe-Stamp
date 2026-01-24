@@ -8,7 +8,6 @@ import typer
 from stamp.extract import extract_metadata
 from stamp.schema import load_schema
 from stamp.validate import validate_artifact
-from stamp.fix import build_fix_proposals
 
 app = typer.Typer(
     add_completion=False,
@@ -41,11 +40,6 @@ def run(
         "--summary",
         help="Emit structured summary instead of raw diagnostics.",
     ),
-    fix_proposals: bool = typer.Option(
-        False,
-        "--fix-proposals",
-        help="Emit fix proposals derived from diagnostics (no changes applied).",
-    ),
     quiet: bool = typer.Option(
         False,
         "--quiet",
@@ -61,13 +55,13 @@ def run(
 
     Notes:
       - This command never mutates artifacts.
-      - Fix proposals are descriptive only.
+      - It performs observation only (no fixing, no normalization).
     """
 
     extracted = extract_metadata(artifact)
     resolved_schema = load_schema(schema)
 
-    # IMPORTANT: keyword-only call (validate_artifact enforces this)
+    # Keyword-only call enforced by validate_artifact signature
     result = validate_artifact(
         extracted=extracted,
         resolved_schema=resolved_schema,
@@ -75,16 +69,6 @@ def run(
 
     diagnostics = result.diagnostics
     passed = len(diagnostics) == 0
-
-    # --- Fix proposal mode ---
-    if fix_proposals:
-        proposals = build_fix_proposals(
-            diagnostics=diagnostics,
-            artifact=artifact,
-            schema=schema,
-        )
-        typer.echo(json.dumps(proposals, indent=2))
-        raise typer.Exit(code=0 if passed else 1)
 
     # --- Summary mode ---
     if summary:
