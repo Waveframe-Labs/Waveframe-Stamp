@@ -39,166 +39,220 @@ anchors:
 
 # Stamp
 
-**Stamp is a schema-agnostic structural diagnostics engine.**
+**Stamp** is a deterministic metadata validation and remediation tool for governed research artifacts.
 
-It validates, classifies, and optionally normalizes metadata blocks using externally supplied schemas — without embedding policy, governance, or domain-specific semantics.
+It validates artifact metadata against a formal schema (e.g. ARI metadata), emits **structured diagnostics**, proposes **safe mechanical fixes**, and produces **human-action remediation summaries** when automation ends.
 
 Stamp is designed to be:
-- deterministic,
-- composable,
-- auditable,
-- and usable as a low-level primitive inside larger compliance or governance systems.
+
+* schema-agnostic
+* policy-neutral
+* reproducible
+* machine- and human-readable
+
+It is a **front door** to governed research workflows — not an enforcement engine.
 
 ---
 
-## What Stamp Is
+## What Stamp Is (and Is Not)
 
-Stamp is:
+### Stamp **is**
 
-- A **structural validation engine** for metadata blocks
-- **Schema-agnostic** by design (JSON Schema draft 2020-12)
-- Deterministic and reproducible
-- Capable of **diagnostics-only** or **opt-in mechanical fixing**
-- Safe to embed inside CI pipelines, tooling chains, or governance engines
+* A metadata extractor
+* A schema validator
+* A diagnostic normalizer (Canonical Diagnostic Objects / CDOs)
+* A safe auto-fix engine (conservative by design)
+* A human-action explainer (remediation summaries)
 
-Stamp operates purely on *structure*, not meaning.
+### Stamp **is not**
 
----
+* A policy engine
+* A governance authority
+* A content validator
+* An opinionated formatter
+* An enforcement mechanism (that’s CRI-CORE)
 
-## What Stamp Is Not
-
-Stamp is **not**:
-
-- A governance engine
-- A policy interpreter
-- A compliance authority
-- A claim lifecycle manager
-- A semantic or domain-aware validator
-
-Stamp does **not** decide:
-- whether something is acceptable,
-- whether a claim is valid,
-- or whether an artifact should advance state.
-
-Those decisions belong to downstream systems.
+Stamp explains **what is wrong**, **what can be fixed automatically**, and **what requires human judgment** — nothing more, nothing less.
 
 ---
 
-## Core Responsibilities
+## High-Level Architecture
 
-Stamp has exactly three responsibilities:
+Stamp is intentionally layered:
 
-1. **Validate**
-   - Apply an external schema to a metadata block
-   - Detect structural violations
+```
+Artifact
+  ↓
+[ Extraction ]
+  ↓
+[ Schema Resolution ]
+  ↓
+[ Validation ]
+  ↓
+[ Diagnostics (CDOs) ]
+  ↓
+┌───────────────┬───────────────────┐
+│ Auto Fix      │ Human Remediation │
+│ (safe only)   │ Summary           │
+└───────────────┴───────────────────┘
+```
 
-2. **Diagnose**
-   - Translate validation failures into stable, machine-readable error objects
-   - Classify severity, repairability, and provenance impact
-
-3. **Normalize (Optional)**
-   - Perform deterministic, mechanical fixes
-   - Only when explicitly authorized
-   - Never invent semantic content
-
-Nothing else.
-
----
-
-## Schema-Agnostic by Design
-
-Stamp does not own schemas.
-
-Instead, it:
-- accepts a schema as an input artifact,
-- validates metadata against that schema,
-- emits diagnostics based solely on schema rules.
-
-This allows Stamp to be used with:
-- ARI metadata schemas
-- FAIR metadata profiles
-- internal enterprise standards
-- regulatory or industry-specific schemas
-- entirely custom schemas
-
-Stamp itself does not change when schemas change.
+Each layer is deterministic and independently testable.
 
 ---
 
-## Fixing vs Enforcement
+## Supported Artifact Types (Current)
 
-Stamp may optionally run in **fix mode**, but fixing is strictly limited:
+* Markdown files with YAML frontmatter
+* (Upcoming) Code files with ARI metadata embedded in HTML comments
 
-- Only mechanical, deterministic changes
-- No semantic inference
-- No policy decisions
-- No authority escalation
-
-Stamp **never enforces outcomes**.
-
-Enforcement, approval, claim state transitions, and lifecycle management are the responsibility of downstream systems (e.g., CRI-CORE).
+> Stamp does **not** assume a specific file type — only that metadata can be deterministically extracted.
 
 ---
 
-## Typical Usage
+## Core Concepts
 
-Stamp is intended to be embedded, not worshipped.
+### Canonical Diagnostic Objects (CDOs)
 
-Examples:
-- A CLI that validates metadata before commit
-- A GitHub Action that blocks merges on structural errors
-- A governance engine that consumes Stamp diagnostics
-- A SaaS platform aggregating diagnostics across repositories
+All validation errors are normalized into **stable, structured diagnostics**:
 
-In all cases, Stamp is the *diagnostic substrate*, not the decision-maker.
+Each diagnostic includes:
 
----
+* semantic ID (stable ABI)
+* severity
+* schema keyword
+* instance path
+* schema path
+* human-readable message
+* structured details (when available)
+* optional fix capability
 
-## Relationship to Governance Frameworks
+This makes diagnostics:
 
-Stamp is **governance-compatible**, not governance-bound.
-
-For example:
-- The Aurora Research Initiative (ARI) uses Stamp to validate metadata
-- ARI policies interpret Stamp’s diagnostics
-- ARI enforcement is handled elsewhere
-
-Stamp itself remains neutral and reusable.
-
----
-
-## Roadmap (High-Level)
-
-### v0.0.x
-- Core validation engine
-- Canonical error object contract
-- CLI wrapper
-- Deterministic normalization (opt-in)
-
-### v0.1.x
-- Performance improvements
-- Extended diagnostics
-- Multiple schema selection per run
-
-### v1.0.0
-- Stable public API
-- First-class integration adapters
-- Enterprise-facing extensions (optional)
+* diffable
+* loggable
+* machine-actionable
+* UI-friendly
 
 ---
 
-## Design Philosophy
+### Fix Proposals vs Fix Application
 
-Stamp is built around a single principle:
+Stamp separates **suggestion** from **mutation**.
 
-> **Structure first. Semantics later. Authority elsewhere.**
+* `--fix-proposals`
+  → describes *possible* fixes (no changes applied)
 
-By keeping these concerns separate, Stamp remains:
-- simple,
-- trustworthy,
-- and adaptable.
+* `fix apply`
+  → applies **only** safe, mechanical fixes
+  → never guesses
+  → never invents data
+
+Example of auto-fixable issue:
+
+* Removing unexpected metadata keys (`additionalProperties`)
+
+Everything else remains human-owned.
 
 ---
+
+### Remediation Summaries
+
+When automation stops, Stamp produces a **human-action remediation summary** that classifies:
+
+* what remains broken
+* why it’s broken
+* who must decide
+* what type of decision is required
+
+Action types include:
+
+* `author_decision`
+* `governance_decision`
+* `disclosure_decision`
+* `auto_fixable`
+
+This is designed for:
+
+* researchers
+* reviewers
+* compliance tooling
+* UI presentation
+
+---
+
+## CLI Usage
+
+### Validate an artifact
+
+```bash
+python -m stamp.cli.main validate run artifact.md \
+  --schema ari-metadata.schema.v3.0.2.json
+```
+
+### Get a validation summary
+
+```bash
+python -m stamp.cli.main validate run artifact.md \
+  --schema ari-metadata.schema.v3.0.2.json \
+  --summary
+```
+
+### See fix proposals
+
+```bash
+python -m stamp.cli.main validate run artifact.md \
+  --schema ari-metadata.schema.v3.0.2.json \
+  --fix-proposals
+```
+
+### Apply safe fixes
+
+```bash
+python -m stamp.cli.main fix apply artifact.md \
+  --schema ari-metadata.schema.v3.0.2.json \
+  --out artifact.fixed.md
+```
+
+### Human remediation summary
+
+```bash
+python -m stamp.cli.main validate run artifact.md \
+  --schema ari-metadata.schema.v3.0.2.json \
+  --remediation
+```
+
+---
+
+## Design Principles
+
+* **Determinism over convenience**
+* **Traceability over magic**
+* **No self-approval**
+* **Separation of validation, fixing, and judgment**
+* **Format-agnostic governance**
+
+Stamp should always be boring, predictable, and explainable.
+
+---
+
+## Roadmap (Near-Term)
+
+* HTML-comment metadata extraction for code files
+* Minimal Streamlit UI (paste → validate → explain)
+* Public v0.1 release
+* CRI-CORE integration (enforcement layer)
+
+---
+
+## Status
+
+> Actively developed
+> Internal coherence phase
+> Architecture stable, contracts stabilizing
+
+---
+
 ## Citation
 
 If you use **Stamp** in academic work, tooling research, or technical documentation, please cite it as follows.
