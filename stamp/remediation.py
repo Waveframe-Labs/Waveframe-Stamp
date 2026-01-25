@@ -1,8 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Dict, List, Optional
-
-from stamp.validate import ValidationResult
 
 
 # -----------------------------
@@ -35,14 +34,14 @@ def _classify_action_type(diagnostic: Dict[str, Any]) -> str:
     }:
         return "author_decision"
 
-    # Additional properties (usually auto-fixable, but if unresolved → human)
+    # Additional properties (may be auto-fixable)
     if rule_id == "object.no_additional_properties":
         fix = diagnostic.get("fix")
         if fix and fix.get("fixable"):
             return "auto_fixable"
         return "author_decision"
 
-    # Default conservative fallback
+    # Conservative fallback
     return "author_decision"
 
 
@@ -64,18 +63,20 @@ def _extract_field_path(diagnostic: Dict[str, Any]) -> str:
 
 def build_remediation_summary(
     *,
-    validation_result: ValidationResult,
+    diagnostics: List[Dict[str, Any]],
+    artifact: Path,
+    schema: Path,
     fix_result: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
-    Build a human-action remediation summary from validation + optional fix results.
+    Build a human-action remediation summary from validation diagnostics
+    and optional fix results.
 
     This does NOT enforce policy.
     This does NOT mutate artifacts.
-    It only classifies what remains and why.
+    It only explains what remains and why.
     """
 
-    diagnostics = validation_result.diagnostics
     passed = len(diagnostics) == 0
 
     auto_fix_applied = 0
@@ -87,7 +88,7 @@ def build_remediation_summary(
     for d in diagnostics:
         action_type = _classify_action_type(d)
 
-        # Skip purely auto-fixable issues if they were already applied
+        # Skip auto-fixable issues if fixes were already applied
         if action_type == "auto_fixable" and fix_result:
             continue
 
@@ -107,10 +108,8 @@ def build_remediation_summary(
     )
 
     return {
-        "artifact": str(validation_result.artifact_path)
-        if validation_result.artifact_path
-        else None,
-        "schema": validation_result.schema_id,
+        "artifact": str(artifact),
+        "schema": str(schema),
         "validation": {
             "passed": passed,
             "diagnostic_count": len(diagnostics),
