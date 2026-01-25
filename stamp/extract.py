@@ -1,3 +1,34 @@
+<!--
+title: "Stamp Metadata Extraction Module"
+filetype: "operational"
+type: "specification"
+domain: "enforcement"
+version: "0.1.0"
+doi: "TBD-0.1.0"
+status: "Draft"
+created: "2026-01-25"
+updated: "2026-01-25"
+
+author:
+  name: "Waveframe Labs"
+  email: "contact@waveframelabs.org"
+  orcid: "https://orcid.org/0009-0006-6043-9295"
+
+maintainer:
+  name: "Waveframe Labs"
+  url: "https://waveframelabs.org"
+
+ai_assisted: "partial"
+ai_assistance_details: >
+  AI assistance was used to help draft and refine the metadata extraction
+  logic and documentation structure. All architectural decisions,
+  validation behavior, and acceptance criteria were human-directed
+  and reviewed.
+
+dependencies: []
+anchors: []
+-->
+
 from __future__ import annotations
 
 from dataclasses import dataclass
