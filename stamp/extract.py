@@ -1,7 +1,7 @@
 """
 <!--
 title: "Stamp — Metadata Extraction Module"
-filetype: "documentation"
+filetype: "operational"
 type: "specification"
 domain: "enforcement"
 version: "0.0.1"
@@ -16,14 +16,15 @@ author:
 maintainer:
   name: "Waveframe Labs"
   url: "https://waveframelabs.org"
+license: "Apache-2.0"
 copyright:
   holder: "Waveframe Labs"
   year: "2026"
-license: "TBD"
 ai_assisted: "partial"
 ai_assistance_details: "AI-assisted drafting of module metadata and extraction contract notes; human-owned decisions and final validation."
 dependencies: []
-anchors: []
+anchors:
+  - stamp-extract-v0.0.1
 -->
 """
 
@@ -103,7 +104,6 @@ def _extract_markdown_frontmatter(path: Path) -> ExtractedMetadata:
             error=None,
         )
 
-    # Find closing delimiter
     for i in range(1, len(lines)):
         if lines[i].strip() == "---":
             raw_block = "\n".join(lines[1:i])
@@ -124,7 +124,6 @@ def _extract_markdown_frontmatter(path: Path) -> ExtractedMetadata:
                 error=None,
             )
 
-    # Opening delimiter without closing
     return ExtractedMetadata(
         artifact_path=path,
         metadata=None,
