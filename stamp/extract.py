@@ -52,24 +52,32 @@ def extract_metadata(path: Path) -> ExtractedMetadata:
     """
     Extract metadata from an artifact.
 
-    Priority order:
-      1. Markdown YAML frontmatter (if present and valid)
-      2. HTML comment metadata block
+    Deterministic priority rules:
+
+      1. Markdown YAML frontmatter (if present)
+         - If valid: returned immediately
+         - If malformed: error returned, no fallback
+
+      2. HTML-comment metadata
+         - Used only if no frontmatter exists
+
       3. No metadata
     """
 
-    # 1. Markdown frontmatter has absolute priority
+    # Markdown frontmatter has absolute priority
     if path.suffix.lower() == ".md":
         md_result = _extract_markdown_frontmatter(path)
-        if md_result.metadata is not None:
+
+        # Frontmatter exists (valid or invalid)
+        if md_result.raw_block is not None or md_result.error is not None:
             return md_result
 
-    # 2. Fallback: HTML comment metadata (any file type)
+    # Fallback: HTML comment metadata
     html_result = _extract_html_comment_metadata(path)
-    if html_result.metadata is not None:
+    if html_result.metadata is not None or html_result.error is not None:
         return html_result
 
-    # 3. No metadata found
+    # No metadata found
     return ExtractedMetadata(
         artifact_path=path,
         metadata=None,
@@ -134,7 +142,7 @@ def _extract_markdown_frontmatter(path: Path) -> ExtractedMetadata:
 
 def _extract_html_comment_metadata(path: Path) -> ExtractedMetadata:
     """
-    Extract ARI metadata from an HTML comment block at the top of a file.
+    Extract metadata from an HTML comment block at the top of a file.
 
     Expected format:
 
