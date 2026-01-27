@@ -1,3 +1,4 @@
+"""
 <!--
 title: "Stamp — Metadata Extraction Module"
 filetype: "documentation"
@@ -24,6 +25,7 @@ ai_assistance_details: "AI-assisted drafting of module metadata and extraction c
 dependencies: []
 anchors: []
 -->
+"""
 
 from __future__ import annotations
 
