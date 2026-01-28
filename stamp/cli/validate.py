@@ -1,7 +1,37 @@
+"""
+<!--
+title: "Stamp — Validation Command Interface"
+filetype: "operational"
+type: "specification"
+domain: "enforcement"
+version: "0.0.1"
+doi: "TBD-0.0.1"
+status: "Draft"
+created: "2026-01-16"
+updated: "2026-01-27"
+author:
+  name: "Waveframe Labs"
+  email: "test@waveframelabs.org"
+  orcid: "https://orcid.org/0009-0006-6043-9295"
+maintainer:
+  name: "Waveframe Labs"
+  url: "https://waveframelabs.org"
+license: "Apache-2.0"
+copyright:
+  holder: "Waveframe Labs"
+  year: "2026"
+ai_assisted: "partial"
+ai_assistance_details: "AI-assisted drafting of CLI orchestration logic under direct human design control and final validation."
+dependencies: []
+anchors:
+  - stamp-validate-cli-v0.0.1
+-->
+"""
+
 from __future__ import annotations
 
-import json
 from pathlib import Path
+from typing import List
 
 import typer
 
@@ -10,123 +40,99 @@ from stamp.schema import load_schema
 from stamp.validate import validate_artifact
 from stamp.fix import build_fix_proposals
 from stamp.remediation import build_remediation_summary
+from stamp.discovery import discover_artifacts
 
-app = typer.Typer(
-    add_completion=False,
-    help="Validate artifacts against schemas.",
-)
+app = typer.Typer()
 
 
 @app.command("run")
 def run(
-    artifact: Path = typer.Argument(
-        ...,
-        exists=True,
-        readable=True,
-        help="Path to artifact file (e.g., Markdown).",
-    ),
-    schema: Path = typer.Option(
-        ...,
-        "--schema",
-        exists=True,
-        readable=True,
-        help="Path to JSON Schema file.",
-    ),
-    format: str = typer.Option(
-        "json",
-        "--format",
-        help="json | pretty",
-    ),
-    summary: bool = typer.Option(
-        False,
-        "--summary",
-        help="Emit structured validation summary.",
-    ),
-    remediation: bool = typer.Option(
-        False,
-        "--remediation",
-        help="Emit human-action remediation summary.",
-    ),
-    fix_proposals: bool = typer.Option(
-        False,
-        "--fix-proposals",
-        help="Emit fix proposals derived from diagnostics (no changes applied).",
-    ),
-    quiet: bool = typer.Option(
-        False,
-        "--quiet",
-        help="Suppress success output when no violations are found.",
-    ),
-) -> None:
+    artifact: Path,
+    schema: Path = typer.Option(..., "--schema"),
+    summary: bool = typer.Option(False, "--summary"),
+    remediation: bool = typer.Option(False, "--remediation"),
+    fix_proposals: bool = typer.Option(False, "--fix-proposals"),
+):
     """
-    Validate an artifact against a JSON Schema and emit Canonical Diagnostic Objects (CDOs).
-
-    Exit codes:
-      - 0: no diagnostics
-      - 1: diagnostics present
-
-    Notes:
-      - This command never mutates artifacts.
-      - Fix proposals and remediation summaries are descriptive only.
+    Validate a single artifact.
     """
-
     extracted = extract_metadata(artifact)
     resolved_schema = load_schema(schema)
 
-    # Keyword-only call enforced by validate_artifact signature
     result = validate_artifact(
         extracted=extracted,
         resolved_schema=resolved_schema,
     )
 
-    diagnostics = result.diagnostics
-    passed = len(diagnostics) == 0
-
-    # --- Fix proposal mode ---
     if fix_proposals:
-        proposals = build_fix_proposals(
-            diagnostics=diagnostics,
-            artifact=artifact,
-            schema=schema,
-        )
-        typer.echo(json.dumps(proposals, indent=2))
-        raise typer.Exit(code=0 if passed else 1)
+        proposals = build_fix_proposals(result)
+        typer.echo(proposals)
+        raise typer.Exit(code=1 if not result.passed else 0)
 
-    # --- Remediation summary mode ---
     if remediation:
-        remediation_summary = build_remediation_summary(
-            diagnostics=diagnostics,
-            artifact=artifact,
-            schema=schema,
-        )
-        typer.echo(json.dumps(remediation_summary, indent=2))
-        raise typer.Exit(code=0 if passed else 1)
+        report = build_remediation_summary(result)
+        typer.echo(report)
+        raise typer.Exit(code=1 if not result.passed else 0)
 
-    # --- Validation summary mode ---
     if summary:
         typer.echo(
-            json.dumps(
-                {
-                    "artifact": str(artifact),
-                    "schema": str(schema),
-                    "passed": passed,
-                    "diagnostic_count": len(diagnostics),
-                },
-                indent=2,
-            )
+            {
+                "artifact": str(artifact),
+                "schema": str(schema),
+                "passed": result.passed,
+                "diagnostic_count": len(result.diagnostics),
+            }
         )
-        raise typer.Exit(code=0 if passed else 1)
+        raise typer.Exit(code=1 if not result.passed else 0)
 
-    # --- Default diagnostic output ---
-    if diagnostics:
-        if format == "pretty":
-            for d in diagnostics:
-                typer.echo(json.dumps(d, indent=2))
+    typer.echo(result.diagnostics)
+    raise typer.Exit(code=1 if not result.passed else 0)
+
+
+@app.command("repo")
+def repo(
+    root: Path,
+    schema: Path = typer.Option(..., "--schema"),
+):
+    """
+    Validate all discovered artifacts under a root path.
+    """
+    resolved_schema = load_schema(schema)
+    artifacts = discover_artifacts([root])
+
+    results: List[dict] = []
+
+    passed_count = 0
+    failed_count = 0
+
+    for artifact in artifacts:
+        extracted = extract_metadata(artifact.path)
+        result = validate_artifact(
+            extracted=extracted,
+            resolved_schema=resolved_schema,
+        )
+
+        results.append(
+            {
+                "artifact": str(artifact.path),
+                "passed": result.passed,
+                "diagnostic_count": len(result.diagnostics),
+            }
+        )
+
+        if result.passed:
+            passed_count += 1
         else:
-            typer.echo(json.dumps(diagnostics))
-        raise typer.Exit(code=1)
+            failed_count += 1
 
-    if not quiet:
-        typer.echo("✅ Validation passed — no violations found.")
+    typer.echo(
+        {
+            "root": str(root),
+            "total_artifacts": len(results),
+            "passed": passed_count,
+            "failed": failed_count,
+            "results": results,
+        }
+    )
 
-    raise typer.Exit(code=0)
+    raise typer.Exit(code=1 if failed_count > 0 else 0)
