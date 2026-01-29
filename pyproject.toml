@@ -3,14 +3,13 @@ requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "stamp-core"
-version = "0.0.1"
-description = "Schema-agnostic structural diagnostics engine."
+name = "waveframe-stamp"
+version = "0.1.0"
+description = "Schema-agnostic structural diagnostics engine for governed research artifacts."
 readme = "README.md"
 requires-python = ">=3.10"
 
-# License intentionally unspecified pending governance decision
-license = { text = "NOASSERTION" }
+license = { text = "Apache-2.0" }
 
 authors = [
   { name = "Shawn C. Wright", email = "swright@waveframelabs.org" }
@@ -24,8 +23,8 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://waveframelabs.org"
-Source = "https://github.com/waveframe-labs/Waveframe-Stamp"
-Issues = "https://github.com/waveframe-labs/Waveframe-Stamp/issues"
+Source = "https://github.com/Waveframe-Labs/Waveframe-Stamp"
+Issues = "https://github.com/Waveframe-Labs/Waveframe-Stamp/issues"
 
 [project.optional-dependencies]
 dev = [
@@ -37,7 +36,7 @@ dev = [
 ]
 
 [project.scripts]
-stamp = "stamp.cli.main:main"  
+stamp = "stamp.cli.main:main"
 
 # Flat-layout package discovery (stamp/ at repo root)
 [tool.setuptools.packages.find]
