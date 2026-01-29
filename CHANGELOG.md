@@ -28,7 +28,8 @@ ai_assisted: "none"
 
 dependencies: []
 
-anchors: []
+anchors:
+  - STAMP-CHANGELOG-v0.1.0
 ---
 
 # Stamp — Change Log
@@ -37,77 +38,153 @@ This document records **material design decisions, contract freezes, and layer-l
 
 It is **not a release log** and does **not imply end-user readiness**.
 
-The purpose of this log is to provide an auditable history of how the Stamp layer reached its current form, so that downstream systems (notably CRI-CORE) may rely on its guarantees.
+Its purpose is to provide an auditable history of how the Stamp layer reached its current form, such that downstream systems (notably **CRI-CORE**) may rely on its guarantees without re-interpreting intent.
 
 ---
 
-## [Unreleased] — Stamp Core Layer Completion
+## [Unreleased] — Stamp Core Layer (v0.1.x)
+
+> Core architecture complete. Contracts stabilizing. UX hardening in progress.
 
 ### Added
 
+#### Core Validation & Diagnostics
+
 - Canonical Diagnostic Object (CDO) v1 schema
+- Deterministic normalization of all `jsonschema` errors into CDOs
+- Stable diagnostic IDs suitable for ABI-level reliance
+- Full preservation of:
+  - schema keyword
+  - instance path
+  - schema path
+  - semantic error meaning
+
+#### Fix & Remediation Model
+
 - Normalization Proposal Object (NPO) v1 schema
-- Deterministic diagnostic-to-proposal mapping logic
-- Canonical fixture suites proving:
-  - Required field violations
-  - Enum mismatches
-  - Type mismatches
-  - AdditionalProperties enforcement
-  - Conditional (`if` / `then`) requirements
-- Reference implementation:
-  - `stamp.validate` — fact emission only
-  - `stamp.normalize` — proposal emission only
-- Execution runners for CDO and NPO fixtures
+- Deterministic diagnostic → proposal mapping
+- Explicit separation between:
+  - **fact emission** (validation)
+  - **claim emission** (fix proposals)
+  - **judgment** (human remediation)
 
-### Frozen
+#### CLI & Execution Semantics
 
-The following contracts and behaviors are **explicitly frozen** at v1:
+- `validate run` — single-artifact validation
+- `validate repo` — governed-repository validation
+- Governance gate: only artifacts that **explicitly declare metadata** are validated
+- Structured JSON output for:
+  - diagnostics
+  - summaries
+  - fix proposals
+  - remediation summaries
+- Pipeable, deterministic CLI output suitable for tooling (`jq`, PowerShell, CI)
 
-- **CDO Contract**
-  - Diagnostics represent *facts only*
-  - No inferred intent
-  - No mutation or correction logic
-- **NPO Contract**
-  - Proposals represent *claims*, not actions
-  - Deterministic proposal IDs via hashing
-  - Flat proposal lists (no nesting or execution order)
-- **Separation of Concerns**
-  - Validation and normalization are strictly decoupled
-  - Stamp does not enforce, apply, or approve changes
+#### Execution Trace Artifacts
 
-### Explicit Non-Goals
+- Deterministic execution trace artifact format (`ExecutionTrace`)
+- Machine-validated trace schema
+- Trace artifacts treated as **immutable execution evidence**
+- Explicit exclusion of trace artifacts from metadata governance
+- Support for committing traces under `traces/` as audit records
 
-Stamp **will not**:
+#### Discovery & Extraction
 
-- Mutate or rewrite artifacts
-- Enforce policy decisions
-- Apply fixes automatically
-- Manage approvals or workflows
-- Integrate directly with CRI-CORE at this layer
-
-All enforcement and execution responsibilities are deferred to downstream systems.
+- Deterministic artifact discovery with exclusion rules
+- Explicit metadata extraction precedence:
+  1. Markdown YAML frontmatter
+  2. HTML-comment metadata
+  3. Ungoverned (ignored)
+- No heuristic guessing or fallback inference
 
 ---
 
-## [2026-01-18] — Architecture & Contract Finalization
+### Frozen (Normative Contracts)
+
+The following behaviors are now **contractually frozen** for Stamp v1:
+
+#### Diagnostic Contract (CDO)
+
+- Diagnostics represent **facts only**
+- No inferred intent
+- No policy interpretation
+- No mutation logic
+
+#### Fix Proposal Contract (NPO)
+
+- Proposals represent **claims**, not actions
+- Proposal IDs are deterministic and hash-derived
+- Flat proposal lists (no ordering, no execution semantics)
+
+#### Governance Boundaries
+
+- Validation, fixing, and enforcement are strictly decoupled
+- Stamp never:
+  - applies fixes implicitly
+  - approves changes
+  - enforces policy
+  - mutates artifacts without explicit user command
+
+These guarantees are relied upon by downstream enforcement layers.
+
+---
+
+### Explicit Non-Goals (Reaffirmed)
+
+Stamp **will not**:
+
+- Validate artifact *content*
+- Interpret policy or governance intent
+- Enforce compliance decisions
+- Manage approvals, workflows, or signatures
+- Integrate enforcement logic (delegated to CRI-CORE)
+
+Stamp stops **exactly** where human or institutional judgment begins.
+
+---
+
+## [2026-01-29] — Core Architecture Lock-In
+
+### Milestones
+
+- Completed end-to-end repository validation with governed-only semantics
+- Confirmed deterministic behavior across:
+  - discovery
+  - extraction
+  - validation
+  - diagnostics
+  - trace generation
+- Standardized tool identity and version reporting
+- Normalized all CLI structured output to JSON
+- Finalized README as authoritative architectural explanation
+
+### Outcome
+
+Stamp is now a **stable, boring, explainable front door** to governed research workflows.
+
+---
+
+## [2026-01-18] — Architecture & Contract Finalization (Initial)
 
 - Completed stress-testing of mechanical, inferred, ambiguous, and prohibited normalization scenarios
 - Formalized epistemic classifications for normalization proposals
 - Locked governance boundary between:
   - Facts (CDO)
   - Claims (NPO)
-- Confirmed readiness to serve as an upstream dependency for CRI-CORE
+- Declared readiness to serve as an upstream dependency for CRI-CORE
 
 ---
 
 ## Status
 
 - **Layer completeness:** Achieved
-- **Contracts:** Frozen (v1)
-- **Fixtures:** Passing
-- **Documentation:** In progress (non-blocking)
+- **Core contracts:** Frozen (v1)
+- **Execution semantics:** Stable
+- **Trace artifacts:** Enabled
+- **Documentation:** Complete
+- **Release tag:** Pending (post-integration)
 
-No version tag has been applied. Tagging will occur only after downstream integration milestones are reached.
+Stamp is no longer exploratory. Remaining work is polish, UX, and integration.
 
 ---
 
