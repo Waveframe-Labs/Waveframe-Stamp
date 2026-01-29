@@ -48,7 +48,9 @@ from stamp.trace import (
 )
 from stamp.trace_schema import validate_trace  # ← NEW
 
-app = typer.Typer()
+app = typer.Typer(
+    help="Validate artifacts against a metadata schema."
+)
 
 
 def _is_passed(result: ValidationResult) -> bool:
