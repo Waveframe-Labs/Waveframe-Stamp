@@ -197,6 +197,10 @@ This is designed for:
 
 ## CLI Usage
 
+### Shell Compatibility
+
+Stamp is shell-agnostic. All CLI commands emit explicit JSON to stdout and do not rely on shell-specific features. This makes Stamp portable across Bash, zsh, PowerShell, CI runners, and automation environments. For interactive inspection, Linux/macOS users may pipe output to tools like jq, while PowerShell users can use native commands such as ConvertFrom-Json. No external tooling is required to run Stamp itself—JSON consumers are optional and environment-specific.  
+
 ### Validate an artifact
 
 ```bash
