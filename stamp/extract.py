@@ -3,15 +3,15 @@
 title: "Stamp — Metadata Extraction Module"
 filetype: "operational"
 type: "specification"
-domain: "enforcement"
-version: "0.0.1"
-doi: "TBD-0.0.1"
-status: "Draft"
+domain: "methodology"
+version: "0.1.0"
+doi: "TBD-0.1.0"
+status: "Active"
 created: "2026-01-27"
-updated: "2026-01-27"
+updated: "2026-01-29"
 author:
-  name: "Waveframe Labs"
-  email: "test@waveframelabs.org"
+  name: "Shawn C. Wright"
+  email: "swright@waveframelabs.org"
   orcid: "https://orcid.org/0009-0006-6043-9295"
 maintainer:
   name: "Waveframe Labs"
@@ -21,10 +21,9 @@ copyright:
   holder: "Waveframe Labs"
   year: "2026"
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted drafting of module metadata and extraction contract notes; human-owned decisions and final validation."
+ai_assistance_details: "AI-assisted drafting of metadata extraction logic and precedence rules, with human-defined contracts, review, and final validation."
 dependencies: []
-anchors:
-  - stamp-extract-v0.0.1
+anchors: []
 -->
 """
 

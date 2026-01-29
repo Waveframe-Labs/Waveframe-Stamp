@@ -1,13 +1,13 @@
 ---
-title: "Stamp Changelog"
+title: "Stamp — Changelog"
 filetype: "log"
 type: "normative"
 domain: "documentation"
-version: "0.0.1"
-doi: "TBD-0.0.1"
-status: "Draft"
+version: "0.1.0"
+doi: "TBD-0.1.0"
+status: "Active"
 created: "2026-01-18"
-updated: "2026-01-18"
+updated: "2026-01-29"
 
 author:
   name: "Shawn C. Wright"
@@ -18,7 +18,7 @@ maintainer:
   name: "Waveframe Labs"
   url: "https://waveframelabs.org"
 
-license: "NOASSERTION"
+license: "Apache-2.0"
 
 copyright:
   holder: "Waveframe Labs"
@@ -28,8 +28,7 @@ ai_assisted: "none"
 
 dependencies: []
 
-anchors:
-  - "STAMP-CHANGELOG-v0.0.1"
+anchors: []
 ---
 
 # Stamp — Change Log

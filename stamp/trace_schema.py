@@ -2,16 +2,16 @@
 <!--
 title: "Stamp — Trace Artifact Schema"
 filetype: "schema"
-type: "specification"
-domain: "enforcement"
-version: "0.0.1"
-doi: "TBD-0.0.1"
-status: "Draft"
+type: "normative"
+domain: "methodology"
+version: "0.1.0"
+doi: "TBD-0.1.0"
+status: "Active"
 created: "2026-01-27"
-updated: "2026-01-27"
+updated: "2026-01-29"
 author:
-  name: "Waveframe Labs"
-  email: "test@waveframelabs.org"
+  name: "Shawn C. Wright"
+  email: "swright@waveframelabs.org"
   orcid: "https://orcid.org/0009-0006-6043-9295"
 maintainer:
   name: "Waveframe Labs"
@@ -21,10 +21,9 @@ copyright:
   holder: "Waveframe Labs"
   year: "2026"
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted drafting of the JSON Schema for trace artifacts; human-owned ABI decisions and final validation."
+ai_assistance_details: "AI-assisted drafting of the execution trace JSON Schema and validation scaffolding, with human-defined ABI constraints, review, and final control."
 dependencies: []
-anchors:
-  - stamp-trace-schema-v0.0.1
+anchors: []
 -->
 """
 

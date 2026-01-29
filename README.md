@@ -3,11 +3,11 @@ title: "Stamp"
 filetype: "documentation"
 type: "specification"
 domain: "methodology"
-version: "0.0.1"
-doi: "TBD-0.0.1"
-status: "Draft"
+version: "0.1.0"
+doi: "TBD-0.1.0"
+status: "Active"
 created: "2026-01-16"
-updated: "2026-01-25"
+updated: "2026-01-29"
 
 author:
   name: "Shawn C. Wright"
@@ -25,12 +25,11 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted drafting and structural refinement under direct human authorship and final approval."
+ai_assistance_details: "AI-assisted drafting and structural refinement under direct human authorship, review, and final approval."
 
 dependencies: []
 
-anchors:
-  - "STAMP-README-v0.0.1"
+anchors: []
 ---
 
 <p align="center">
@@ -104,7 +103,7 @@ Each layer is deterministic and independently testable.
 ## Supported Artifact Types (Current)
 
 * Markdown files with YAML frontmatter
-* (Upcoming) Code files with ARI metadata embedded in HTML comments
+* Code files with ARI metadata embedded in HTML comments
 
 > Stamp does **not** assume a specific file type — only that metadata can be deterministically extracted.
 
@@ -222,6 +221,15 @@ python -m stamp.cli.main validate run artifact.md \
   --remediation
 ```
 
+### Validate a repository or directory
+
+```bash
+python -m stamp.cli.main validate repo path/to/repo \
+  --schema ari-metadata.schema.v3.0.2.json
+```  
+
+This discovers artifacts recursively and reports aggregate pass/fail results.  
+
 ---
 
 ## Design Principles
@@ -240,7 +248,7 @@ Stamp should always be boring, predictable, and explainable.
 
 * HTML-comment metadata extraction for code files
 * Minimal Streamlit UI (paste → validate → explain)
-* Public v0.1 release
+* Public v0.1.x hardening (UX polish, docs, edge cases)  
 * CRI-CORE integration (enforcement layer)
 
 ---
@@ -264,7 +272,7 @@ If you use **Stamp** in academic work, tooling research, or technical documentat
   title        = {Stamp: A Schema-Agnostic Structural Diagnostics Engine},
   author       = {Wright, Shawn C.},
   year         = {2026},
-  version      = {0.0.1},
+  version      = {0.1.0},
   publisher    = {Waveframe Labs},
   url          = {https://github.com/waveframelabs/stamp},
   doi          = {TBD}

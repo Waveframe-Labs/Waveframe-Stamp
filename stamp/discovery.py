@@ -3,15 +3,15 @@
 title: "Stamp — Artifact Discovery Module"
 filetype: "operational"
 type: "specification"
-domain: "enforcement"
-version: "0.0.1"
-doi: "TBD-0.0.1"
-status: "Draft"
+domain: "methodology"
+version: "0.1.0"
+doi: "TBD-0.1.0"
+status: "Active"
 created: "2026-01-27"
-updated: "2026-01-27"
+updated: "2026-01-29"
 author:
-  name: "Waveframe Labs"
-  email: "test@waveframelabs.org"
+  name: "Shawn C. Wright"
+  email: "swright@waveframelabs.org"
   orcid: "https://orcid.org/0009-0006-6043-9295"
 maintainer:
   name: "Waveframe Labs"
@@ -21,10 +21,9 @@ copyright:
   holder: "Waveframe Labs"
   year: "2026"
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted drafting of discovery semantics and documentation; human-owned design decisions and final validation."
+ai_assistance_details: "AI-assisted drafting of artifact discovery logic and structural traversal rules, with human-defined constraints, review, and final validation."
 dependencies: []
-anchors:
-  - stamp-discovery-v0.0.1
+anchors: []
 -->
 """
 

@@ -1,3 +1,32 @@
+"""
+<!--
+title: "Stamp — Canonical Diagnostic Object Translation"
+filetype: "operational"
+type: "specification"
+domain: "methodology"
+version: "0.1.0"
+doi: "TBD-0.1.0"
+status: "Active"
+created: "2026-01-16"
+updated: "2026-01-29"
+author:
+  name: "Shawn C. Wright"
+  email: "swright@waveframelabs.org"
+  orcid: "https://orcid.org/0009-0006-6043-9295"
+maintainer:
+  name: "Waveframe Labs"
+  url: "https://waveframelabs.org"
+license: "Apache-2.0"
+copyright:
+  holder: "Waveframe Labs"
+  year: "2026"
+ai_assisted: "partial"
+ai_assistance_details: "AI-assisted drafting of diagnostic translation structure and helper routines, with human-defined semantics, ABI guarantees, review, and final control."
+dependencies: []
+anchors: []
+-->
+"""
+
 from __future__ import annotations
 
 from typing import Any, Dict, List
