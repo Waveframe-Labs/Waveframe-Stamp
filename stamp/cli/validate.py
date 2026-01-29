@@ -45,7 +45,7 @@ from stamp.trace import (
     ArtifactTrace,
     now_utc,
 )
-from stamp.trace_schema import validate_trace  # ← NEW
+from stamp.trace_schema import validate_trace
 
 app = typer.Typer(
     help="Validate artifacts against a metadata schema."
@@ -84,7 +84,7 @@ def _write_validated_trace(trace: ExecutionTrace, path: Path) -> None:
 @app.command("run")
 def run(
     artifact: Path,
-    schema: Path = typer.Option(..., "--schema"),
+    schema: str = typer.Option(..., "--schema"),
     summary: bool = typer.Option(False, "--summary"),
     remediation: bool = typer.Option(False, "--remediation"),
     fix_proposals: bool = typer.Option(False, "--fix-proposals"),
@@ -96,6 +96,8 @@ def run(
     started_at = now_utc()
 
     extracted = extract_metadata(artifact)
+
+    # Single-artifact validation assumes explicit intent
     resolved_schema = load_schema(schema)
 
     result = validate_artifact(
@@ -155,11 +157,13 @@ def run(
 @app.command("repo")
 def repo(
     root: Path,
-    schema: Path = typer.Option(..., "--schema"),
+    schema: str = typer.Option(..., "--schema"),
     trace_out: Optional[Path] = typer.Option(None, "--trace-out"),
 ):
     """
-    Validate all discovered artifacts under a root path.
+    Validate all governed artifacts under a root path.
+
+    An artifact is considered governed iff it explicitly declares metadata.
     """
     started_at = now_utc()
 
@@ -173,6 +177,12 @@ def repo(
 
     for artifact in artifacts:
         extracted = extract_metadata(artifact.path)
+
+        # GOVERNANCE GATE:
+        # Only validate artifacts that explicitly declare metadata
+        if extracted.metadata is None:
+            continue
+
         result = validate_artifact(
             extracted=extracted,
             resolved_schema=resolved_schema,
