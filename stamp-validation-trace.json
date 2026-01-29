@@ -1,0 +1,92 @@
+{
+  "trace_version": "0.0.1",
+  "tool": "stamp",
+  "tool_version": "0.0.1",
+  "command": "validate repo",
+  "schema": "C:\\GitHub\\Aurora-Research-Initiative\\schemas\\ari-metadata.schema.v3.0.2.json",
+  "started_at": "2026-01-29T20:11:08.651608+00:00",
+  "finished_at": "2026-01-29T20:11:08.700544+00:00",
+  "exit_code": 0,
+  "artifacts": [
+    {
+      "artifact": "C:\\GitHub\\Waveframe-Stamp\\CHANGELOG.md",
+      "passed": true,
+      "diagnostic_count": 0
+    },
+    {
+      "artifact": "C:\\GitHub\\Waveframe-Stamp\\README.md",
+      "passed": true,
+      "diagnostic_count": 0
+    },
+    {
+      "artifact": "C:\\GitHub\\Waveframe-Stamp\\docs\\OPERATING_MODEL.md",
+      "passed": true,
+      "diagnostic_count": 0
+    },
+    {
+      "artifact": "C:\\GitHub\\Waveframe-Stamp\\stamp\\cdo.py",
+      "passed": true,
+      "diagnostic_count": 0
+    },
+    {
+      "artifact": "C:\\GitHub\\Waveframe-Stamp\\stamp\\discovery.py",
+      "passed": true,
+      "diagnostic_count": 0
+    },
+    {
+      "artifact": "C:\\GitHub\\Waveframe-Stamp\\stamp\\extract.py",
+      "passed": true,
+      "diagnostic_count": 0
+    },
+    {
+      "artifact": "C:\\GitHub\\Waveframe-Stamp\\stamp\\fix.py",
+      "passed": true,
+      "diagnostic_count": 0
+    },
+    {
+      "artifact": "C:\\GitHub\\Waveframe-Stamp\\stamp\\normalize.py",
+      "passed": true,
+      "diagnostic_count": 0
+    },
+    {
+      "artifact": "C:\\GitHub\\Waveframe-Stamp\\stamp\\remediation.py",
+      "passed": true,
+      "diagnostic_count": 0
+    },
+    {
+      "artifact": "C:\\GitHub\\Waveframe-Stamp\\stamp\\schema.py",
+      "passed": true,
+      "diagnostic_count": 0
+    },
+    {
+      "artifact": "C:\\GitHub\\Waveframe-Stamp\\stamp\\trace.py",
+      "passed": true,
+      "diagnostic_count": 0
+    },
+    {
+      "artifact": "C:\\GitHub\\Waveframe-Stamp\\stamp\\trace_schema.py",
+      "passed": true,
+      "diagnostic_count": 0
+    },
+    {
+      "artifact": "C:\\GitHub\\Waveframe-Stamp\\stamp\\validate.py",
+      "passed": true,
+      "diagnostic_count": 0
+    },
+    {
+      "artifact": "C:\\GitHub\\Waveframe-Stamp\\stamp\\cli\\fix.py",
+      "passed": true,
+      "diagnostic_count": 0
+    },
+    {
+      "artifact": "C:\\GitHub\\Waveframe-Stamp\\stamp\\cli\\main.py",
+      "passed": true,
+      "diagnostic_count": 0
+    },
+    {
+      "artifact": "C:\\GitHub\\Waveframe-Stamp\\stamp\\cli\\validate.py",
+      "passed": true,
+      "diagnostic_count": 0
+    }
+  ]
+}
