@@ -141,6 +141,58 @@ Stamp **will not**:
 
 Stamp stops **exactly** where human or institutional judgment begins.
 
+---  
+
+## [2026-01-29] — Packaging, CLI Identity, and Documentation Hardening
+
+### Added
+
+- Formalized Python packaging via `pyproject.toml`
+  - Declared canonical project metadata
+  - Defined console script entrypoint (`stamp`)
+  - Enabled `pip install -e .` and PATH-based CLI usage
+- Established **JSON-first CLI output contract**
+  - All structured CLI output (diagnostics, summaries, remediation, proposals) now emits explicit JSON
+  - Output is deterministic, pipeable, and shell-agnostic
+- Added execution trace governance semantics
+  - Trace artifacts defined as immutable execution evidence
+  - Explicit exclusion of trace artifacts from metadata governance
+  - Standardized trace storage under `traces/`
+
+### Changed
+
+- Renamed project identity to **`waveframe-stamp`** to avoid namespace collision with an existing PyPI package
+- Standardized tool identity and version reporting across:
+  - CLI output
+  - Execution traces
+  - Internal constants
+- Updated README to serve as the **authoritative entry point** for:
+  - Purpose and scope
+  - Governance boundaries
+  - CLI usage
+  - Shell compatibility
+  - Installation and quick start guidance
+
+### Clarified
+
+- Distinguished between:
+  - **Repository cloning** vs **package installation**
+  - **Validation tooling** vs **enforcement layers**
+- Documented shell compatibility explicitly:
+  - Bash / zsh (`jq`)
+  - PowerShell (`ConvertFrom-Json`)
+  - CI and automation environments
+- Confirmed that Stamp is a **front-door validation layer**, not a policy authority or enforcement engine
+
+### Deferred
+
+- Public PyPI publication (pending final naming, license confirmation, and release tagging)
+- DOI finalization (to be updated post-release)
+- Formal release tagging (blocked on documentation and integration readiness)
+
+This entry reflects a transition from internal prototyping to a
+**stable, externally-consumable CLI tool with frozen core contracts**.
+
 ---
 
 ## [2026-01-29] — Core Architecture Lock-In
