@@ -31,7 +31,7 @@ anchors:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import typer
 
@@ -41,6 +41,11 @@ from stamp.validate import validate_artifact, ValidationResult
 from stamp.fix import build_fix_proposals
 from stamp.remediation import build_remediation_summary
 from stamp.discovery import discover_artifacts
+from stamp.trace import (
+    ExecutionTrace,
+    ArtifactTrace,
+    now_utc,
+)
 
 app = typer.Typer()
 
@@ -59,10 +64,13 @@ def run(
     summary: bool = typer.Option(False, "--summary"),
     remediation: bool = typer.Option(False, "--remediation"),
     fix_proposals: bool = typer.Option(False, "--fix-proposals"),
+    trace_out: Optional[Path] = typer.Option(None, "--trace-out"),
 ):
     """
     Validate a single artifact.
     """
+    started_at = now_utc()
+
     extracted = extract_metadata(artifact)
     resolved_schema = load_schema(schema)
 
@@ -72,18 +80,17 @@ def run(
     )
 
     passed = _is_passed(result)
+    exit_code = 0 if passed else 1
 
     if fix_proposals:
         proposals = build_fix_proposals(result)
         typer.echo(proposals)
-        raise typer.Exit(code=1 if not passed else 0)
 
-    if remediation:
+    elif remediation:
         report = build_remediation_summary(result)
         typer.echo(report)
-        raise typer.Exit(code=1 if not passed else 0)
 
-    if summary:
+    elif summary:
         typer.echo(
             {
                 "artifact": str(artifact),
@@ -92,24 +99,49 @@ def run(
                 "diagnostic_count": len(result.diagnostics),
             }
         )
-        raise typer.Exit(code=1 if not passed else 0)
 
-    typer.echo(result.diagnostics)
-    raise typer.Exit(code=1 if not passed else 0)
+    else:
+        typer.echo(result.diagnostics)
+
+    finished_at = now_utc()
+
+    if trace_out is not None:
+        trace = ExecutionTrace(
+            tool="stamp",
+            tool_version="0.0.1",
+            command="validate run",
+            schema=str(schema),
+            started_at=started_at,
+            finished_at=finished_at,
+            exit_code=exit_code,
+            artifacts=[
+                ArtifactTrace(
+                    artifact=str(artifact),
+                    passed=passed,
+                    diagnostic_count=len(result.diagnostics),
+                )
+            ],
+        )
+        trace.write_json(trace_out)
+
+    raise typer.Exit(code=exit_code)
 
 
 @app.command("repo")
 def repo(
     root: Path,
     schema: Path = typer.Option(..., "--schema"),
+    trace_out: Optional[Path] = typer.Option(None, "--trace-out"),
 ):
     """
     Validate all discovered artifacts under a root path.
     """
+    started_at = now_utc()
+
     resolved_schema = load_schema(schema)
     artifacts = discover_artifacts([root])
 
-    results: List[dict] = []
+    artifact_traces: List[ArtifactTrace] = []
 
     passed_count = 0
     failed_count = 0
@@ -123,12 +155,12 @@ def repo(
 
         passed = _is_passed(result)
 
-        results.append(
-            {
-                "artifact": str(artifact.path),
-                "passed": passed,
-                "diagnostic_count": len(result.diagnostics),
-            }
+        artifact_traces.append(
+            ArtifactTrace(
+                artifact=str(artifact.path),
+                passed=passed,
+                diagnostic_count=len(result.diagnostics),
+            )
         )
 
         if passed:
@@ -139,11 +171,26 @@ def repo(
     typer.echo(
         {
             "root": str(root),
-            "total_artifacts": len(results),
+            "total_artifacts": len(artifact_traces),
             "passed": passed_count,
             "failed": failed_count,
-            "results": results,
         }
     )
 
-    raise typer.Exit(code=1 if failed_count > 0 else 0)
+    finished_at = now_utc()
+    exit_code = 0 if failed_count == 0 else 1
+
+    if trace_out is not None:
+        trace = ExecutionTrace(
+            tool="stamp",
+            tool_version="0.0.1",
+            command="validate repo",
+            schema=str(schema),
+            started_at=started_at,
+            finished_at=finished_at,
+            exit_code=exit_code,
+            artifacts=artifact_traces,
+        )
+        trace.write_json(trace_out)
+
+    raise typer.Exit(code=exit_code)
