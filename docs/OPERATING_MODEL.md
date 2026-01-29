@@ -1,13 +1,13 @@
 ---
 title: "Stamp Operating Model"
 filetype: "documentation"
-type: "normative"
+type: "specification"
 domain: "documentation"
-version: "0.0.1"
-doi: "TBD-0.0.1"
-status: "Draft"
+version: "0.1.0"
+doi: "TBD-0.1.0"
+status: "Active"
 created: "2026-01-18"
-updated: "2026-01-18"
+updated: "2026-01-29"
 
 author:
   name: "Shawn C. Wright"
@@ -18,48 +18,51 @@ maintainer:
   name: "Waveframe Labs"
   url: "https://waveframelabs.org"
 
-license: "NOASSERTION"
+license: "Apache-2.0"
 
 copyright:
   holder: "Waveframe Labs"
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted drafting under human architectural control; all architectural decisions validated and finalized by the author."
+ai_assistance_details: "AI-assisted drafting under human architectural control; all operating guarantees, non-goals, and release semantics reviewed and finalized by the author."
 
 dependencies: []
 
 anchors:
-  - "STAMP-OPERATING-MODEL-v0.0.1"
+  - "STAMP-OPERATING-MODEL-v0.1.0"
 ---
 
 # Stamp — Operating Model
 
 ## 1. Purpose
 
-Stamp is a **schema-agnostic metadata engine** designed to **inspect, validate, and reason about metadata** in digital artifacts without enforcing or mutating them by default.
+Stamp is a **schema-agnostic metadata validation and diagnostics engine**.
 
-Stamp exists to produce **epistemically clean outputs**:
+Its purpose is to **inspect, validate, and reason about metadata** embedded in digital artifacts, while maintaining strict separation between:
 
-- **Facts** about compliance (Canonical Diagnostic Objects — CDOs)
-- **Claims** about possible remediation (Normalization Proposal Objects — NPOs)
+- **fact** (what is verifiably true),
+- **inference** (what may be proposed),
+- **action** (what must be decided elsewhere).
 
-Stamp does **not** decide legitimacy, authority, or approval.
-It produces structured information that downstream systems may act upon.
+Stamp exists to produce **epistemically clean outputs** that downstream systems may rely on without inheriting hidden assumptions or authority.
 
 ---
 
-## 2. Non-Goals (Explicit)
+## 2. Explicit Non-Goals
 
 Stamp is **not**:
 
 - A formatter
-- A linter that rewrites files silently
-- A policy enforcement engine
+- A linter that silently rewrites files
+- A policy engine
 - A governance authority
-- A Waveframe-only tool
+- An enforcement mechanism
+- A Waveframe-specific tool
 
-Any behavior implying enforcement, mutation, or approval **violates this model**.
+Stamp **never** approves, rejects, or legitimizes artifacts.
+
+Any behavior implying silent mutation, enforcement, or institutional authority **violates this operating model**.
 
 ---
 
@@ -67,72 +70,81 @@ Any behavior implying enforcement, mutation, or approval **violates this model**
 
 Stamp MUST be able to:
 
-1. Traverse repositories or directories
-2. Discover candidate artifacts
+1. Traverse directories or repositories
+2. Discover candidate artifacts deterministically
 3. Extract metadata from supported formats
 4. Validate metadata against **user-supplied schemas**
-5. Emit deterministic diagnostics (CDO)
-6. Optionally emit normalization proposals (NPO)
-7. Operate without mutating source artifacts
+5. Emit deterministic diagnostics
+6. Propose **safe, mechanical fixes** when explicitly requested
+7. Operate without mutating source artifacts by default
+
+All capabilities are opt-in and explicitly invoked.
 
 ---
 
 ## 4. Execution Modes
 
-Stamp exposes **explicit execution modes**. No mode implies another.
+Stamp exposes **explicit execution modes**.  
+No mode implies another.
 
 ### 4.1 `validate` (Default)
 
 **Behavior**
 - Extract metadata
-- Validate against schema
-- Emit CDOs only
+- Validate against a supplied schema
+- Emit Canonical Diagnostic Objects (CDOs)
 
 **Guarantees**
 - Read-only
 - Deterministic
 - No prescriptions
+- No mutation
 
 ---
 
-### 4.2 `normalize` (Explicit Opt-In)
+### 4.2 `fix` (Explicit Opt-In)
 
 **Behavior**
 - Perform everything in `validate`
-- Generate NPOs based on CDOs and internal heuristics
+- Propose and optionally apply **safe, mechanical fixes only**
+  (e.g. removal of disallowed fields)
 
 **Guarantees**
-- Still read-only
-- No mutation
-- No enforcement
-- Proposals may require approval or be prohibited
+- Never invents data
+- Never guesses intent
+- Never applies semantic or policy-level changes
+- Writes results to a new artifact when applied
+
+Stamp does not decide whether a fix *should* be applied — only whether it is mechanically safe.
 
 ---
 
 ### 4.3 `extract` (Internal / Supporting)
 
 **Behavior**
-- Extract canonical metadata view only
+- Extract a canonical metadata view only
 
 **Use Cases**
 - Indexing
-- Forge integration
-- Downstream analysis
+- Analysis
+- Integration with downstream tooling
 
 ---
 
 ## 5. Inputs
 
-Stamp accepts the following inputs:
+Stamp accepts:
 
 - One or more filesystem paths
-- One or more JSON Schemas (any domain)
-- Optional execution flags (mode selection)
+- One or more JSON Schemas
+- Explicit execution flags
 
 Stamp MUST NOT assume:
+
 - A specific schema
 - A specific institution
 - A specific metadata policy
+- A specific governance framework
 
 ---
 
@@ -140,23 +152,20 @@ Stamp MUST NOT assume:
 
 Stamp emits **structured data**, never side effects.
 
-### 6.1 Canonical Diagnostic Objects (CDO)
+### 6.1 Canonical Diagnostic Objects (CDOs)
 
 - Represent **facts**
 - Deterministic
 - Schema-validated
+- Stable identifiers
 - Order-stable
 
-### 6.2 Normalization Proposal Objects (NPO)
+### 6.2 Fix Proposals
 
-- Represent **claims**
+- Represent **mechanically safe suggestions**
+- Explicitly classified
 - Optional
-- Epistemically classified:
-  - mechanical
-  - inferred
-  - ambiguous
-  - prohibited
-- Never applied automatically by Stamp
+- Never applied without opt-in
 
 ---
 
@@ -164,15 +173,16 @@ Stamp emits **structured data**, never side effects.
 
 Stamp guarantees:
 
-- Stable output ordering
-- Deterministic identifiers
-- Schema-validated outputs
-- Clear separation of fact vs inference
+- Deterministic output ordering
+- Stable diagnostic identifiers
+- Clear separation of fact vs proposal
+- Optional execution traces
 
 These guarantees exist to support:
-- CRI-CORE enforcement
+
 - Auditability
-- Trust without authority
+- Reproducibility
+- Downstream enforcement or workflow tooling
 
 ---
 
@@ -180,27 +190,32 @@ These guarantees exist to support:
 
 Stamp is **tool-agnostic but philosophy-aligned**.
 
-- It can be used independently
-- It embeds no institutional assumptions
-- It is designed to integrate with:
-  - ARI (governance)
-  - NTD / NTS (AI traceability)
-  - AWO (workflow orchestration)
-  - CRI-CORE (enforcement)
+It can be used independently, or as a component within larger systems, including:
 
-Stamp does not require these systems — but they require Stamp-like guarantees.
+- Governance frameworks
+- Workflow orchestration tools
+- Enforcement engines
+- Compliance pipelines
+
+Stamp embeds **no institutional authority**.  
+It provides reliable signals that other systems may act upon.
 
 ---
 
 ## 9. Versioning & Evolution
 
-This operating model is versioned independently of implementation.
+This operating model is versioned independently of implementation details.
 
-Changes to this document MUST be logged and justified.
-Breaking changes require explicit governance acknowledgment.
+Changes to this document MUST be:
+
+- Explicit
+- Logged
+- Justified
+
+Breaking semantic changes require clear acknowledgment and version updates.
 
 ---
 
 <div align="center">
-  <sub>© 2026 Waveframe Labs — Governed under the Aurora Research Initiative (ARI)</sub>
+  <sub>© 2026 Waveframe Labs</sub>
 </div>
