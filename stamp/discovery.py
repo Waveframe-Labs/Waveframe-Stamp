@@ -40,7 +40,17 @@ EXCLUDED_DIRS = {
     ".venv",
     "node_modules",
     "archive",
+    "traces",
+    ".stamp",
 }
+
+EXCLUDED_FILENAMES = {
+    "stamp-validation-trace.json",
+}
+
+EXCLUDED_SUFFIXES = (
+    "-trace.json",
+)
 
 
 @dataclass(frozen=True)
@@ -52,9 +62,34 @@ class DiscoveredArtifact:
     - no parsing
     - no validation
     - no schema awareness
+
+    This defines the epistemic boundary of governable artifacts.
     """
     path: Path
     size_bytes: int
+
+
+def _is_excluded(path: Path) -> bool:
+    """
+    Determine whether a path should be excluded from discovery.
+
+    Exclusions are deterministic and governance-driven.
+    """
+    # Directory-based exclusions
+    if any(part in EXCLUDED_DIRS for part in path.parts):
+        return True
+
+    name = path.name
+
+    # Exact filename exclusions
+    if name in EXCLUDED_FILENAMES:
+        return True
+
+    # Suffix-based exclusions (e.g. execution traces)
+    if any(name.endswith(suffix) for suffix in EXCLUDED_SUFFIXES):
+        return True
+
+    return False
 
 
 def discover_artifacts(
@@ -66,7 +101,7 @@ def discover_artifacts(
     This function performs filesystem traversal only.
     It does not parse files, inspect contents, or apply schemas.
 
-    Exclusion rules are directory-based and deterministic.
+    Exclusion rules define the universe of governable artifacts.
     """
     artifacts: List[DiscoveredArtifact] = []
 
@@ -75,6 +110,8 @@ def discover_artifacts(
 
         # Single file root
         if root_path.is_file():
+            if _is_excluded(root_path):
+                continue
             try:
                 artifacts.append(
                     DiscoveredArtifact(
@@ -95,8 +132,7 @@ def discover_artifacts(
             if not path.is_file():
                 continue
 
-            # Skip excluded directories
-            if any(part in EXCLUDED_DIRS for part in path.parts):
+            if _is_excluded(path):
                 continue
 
             try:
