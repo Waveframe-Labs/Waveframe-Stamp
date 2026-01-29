@@ -28,6 +28,7 @@ anchors: []
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import List, Optional
 
@@ -59,6 +60,15 @@ TRACE_VERSION = "0.0.1"
 app = typer.Typer(
     help="Validate artifacts against a metadata schema."
 )
+
+
+def _emit(obj: object) -> None:
+    """
+    Emit structured CLI output as explicit JSON.
+
+    This is the canonical output path for all validation results.
+    """
+    typer.echo(json.dumps(obj, indent=2))
 
 
 def _is_passed(result: ValidationResult) -> bool:
@@ -126,11 +136,11 @@ def run(
     exit_code = 0 if passed else 1
 
     if fix_proposals:
-        typer.echo(build_fix_proposals(result))
+        _emit(build_fix_proposals(result))
     elif remediation:
-        typer.echo(build_remediation_summary(result))
+        _emit(build_remediation_summary(result))
     elif summary:
-        typer.echo(
+        _emit(
             {
                 "artifact": str(artifact),
                 "schema": str(schema),
@@ -139,7 +149,7 @@ def run(
             }
         )
     else:
-        typer.echo(result.diagnostics)
+        _emit(result.diagnostics)
 
     finished_at = now_utc()
 
@@ -219,7 +229,7 @@ def repo(
         else:
             failed_count += 1
 
-    typer.echo(
+    _emit(
         {
             "root": str(root),
             "total_artifacts": len(artifact_traces),
