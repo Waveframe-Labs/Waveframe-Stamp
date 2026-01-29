@@ -46,6 +46,7 @@ from stamp.trace import (
     ArtifactTrace,
     now_utc,
 )
+from stamp.trace_schema import validate_trace  # ← NEW
 
 app = typer.Typer()
 
@@ -55,6 +56,28 @@ def _is_passed(result: ValidationResult) -> bool:
     A validation passes iff there are no error-severity diagnostics.
     """
     return not any(d.get("severity") == "error" for d in result.diagnostics)
+
+
+def _write_validated_trace(trace: ExecutionTrace, path: Path) -> None:
+    """
+    Validate a trace artifact against the trace schema before writing.
+    """
+    errors = validate_trace(trace.to_dict())
+    if errors:
+        typer.secho(
+            "Trace validation failed; trace artifact was not written.",
+            fg=typer.colors.RED,
+            err=True,
+        )
+        for e in errors:
+            typer.secho(
+                f"- {e['message']} (at {e['instance_path']})",
+                fg=typer.colors.RED,
+                err=True,
+            )
+        raise typer.Exit(code=2)
+
+    trace.write_json(path)
 
 
 @app.command("run")
@@ -123,7 +146,7 @@ def run(
                 )
             ],
         )
-        trace.write_json(trace_out)
+        _write_validated_trace(trace, trace_out)
 
     raise typer.Exit(code=exit_code)
 
@@ -193,6 +216,6 @@ def repo(
             exit_code=exit_code,
             artifacts=artifact_traces,
         )
-        trace.write_json(trace_out)
+        _write_validated_trace(trace, trace_out)
 
     raise typer.Exit(code=exit_code)
