@@ -26,7 +26,6 @@ dependencies: []
 anchors: []
 -->
 """
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -47,6 +46,16 @@ from stamp.trace import (
 )
 from stamp.trace_schema import validate_trace
 
+
+# -----------------------------
+# Tool identity (single source)
+# -----------------------------
+
+STAMP_TOOL_NAME = "stamp"
+STAMP_TOOL_VERSION = "0.1.0"
+TRACE_VERSION = "0.0.1"
+
+
 app = typer.Typer(
     help="Validate artifacts against a metadata schema."
 )
@@ -62,6 +71,9 @@ def _is_passed(result: ValidationResult) -> bool:
 def _write_validated_trace(trace: ExecutionTrace, path: Path) -> None:
     """
     Validate a trace artifact against the trace schema before writing.
+
+    Trace artifacts are immutable execution evidence and are NOT
+    subject to metadata governance.
     """
     errors = validate_trace(trace.to_dict())
     if errors:
@@ -81,10 +93,14 @@ def _write_validated_trace(trace: ExecutionTrace, path: Path) -> None:
     trace.write_json(path)
 
 
+# -----------------------------
+# Single-artifact validation
+# -----------------------------
+
 @app.command("run")
 def run(
     artifact: Path,
-    schema: str = typer.Option(..., "--schema"),
+    schema: Path = typer.Option(..., "--schema"),
     summary: bool = typer.Option(False, "--summary"),
     remediation: bool = typer.Option(False, "--remediation"),
     fix_proposals: bool = typer.Option(False, "--fix-proposals"),
@@ -92,12 +108,13 @@ def run(
 ):
     """
     Validate a single artifact.
+
+    Single-artifact validation assumes explicit user intent and does
+    not apply governance discovery rules.
     """
     started_at = now_utc()
 
     extracted = extract_metadata(artifact)
-
-    # Single-artifact validation assumes explicit intent
     resolved_schema = load_schema(schema)
 
     result = validate_artifact(
@@ -109,13 +126,9 @@ def run(
     exit_code = 0 if passed else 1
 
     if fix_proposals:
-        proposals = build_fix_proposals(result)
-        typer.echo(proposals)
-
+        typer.echo(build_fix_proposals(result))
     elif remediation:
-        report = build_remediation_summary(result)
-        typer.echo(report)
-
+        typer.echo(build_remediation_summary(result))
     elif summary:
         typer.echo(
             {
@@ -125,7 +138,6 @@ def run(
                 "diagnostic_count": len(result.diagnostics),
             }
         )
-
     else:
         typer.echo(result.diagnostics)
 
@@ -133,9 +145,9 @@ def run(
 
     if trace_out is not None:
         trace = ExecutionTrace(
-            trace_version="0.0.1",
-            tool="stamp",
-            tool_version="0.0.1",
+            trace_version=TRACE_VERSION,
+            tool=STAMP_TOOL_NAME,
+            tool_version=STAMP_TOOL_VERSION,
             command="validate run",
             schema=str(schema),
             started_at=started_at,
@@ -154,16 +166,21 @@ def run(
     raise typer.Exit(code=exit_code)
 
 
+# -----------------------------
+# Repository validation
+# -----------------------------
+
 @app.command("repo")
 def repo(
     root: Path,
-    schema: str = typer.Option(..., "--schema"),
+    schema: Path = typer.Option(..., "--schema"),
     trace_out: Optional[Path] = typer.Option(None, "--trace-out"),
 ):
     """
     Validate all governed artifacts under a root path.
 
     An artifact is considered governed iff it explicitly declares metadata.
+    Files without metadata are discovered but intentionally ignored.
     """
     started_at = now_utc()
 
@@ -171,7 +188,6 @@ def repo(
     artifacts = discover_artifacts([root])
 
     artifact_traces: List[ArtifactTrace] = []
-
     passed_count = 0
     failed_count = 0
 
@@ -179,7 +195,7 @@ def repo(
         extracted = extract_metadata(artifact.path)
 
         # GOVERNANCE GATE:
-        # Only validate artifacts that explicitly declare metadata
+        # Only artifacts that explicitly declare metadata are governed
         if extracted.metadata is None:
             continue
 
@@ -217,9 +233,9 @@ def repo(
 
     if trace_out is not None:
         trace = ExecutionTrace(
-            trace_version="0.0.1",
-            tool="stamp",
-            tool_version="0.0.1",
+            trace_version=TRACE_VERSION,
+            tool=STAMP_TOOL_NAME,
+            tool_version=STAMP_TOOL_VERSION,
             command="validate repo",
             schema=str(schema),
             started_at=started_at,
