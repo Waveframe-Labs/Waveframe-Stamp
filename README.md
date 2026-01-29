@@ -51,6 +51,8 @@ Stamp is designed to be:
 
 It is a **front door** to governed research workflows — not an enforcement engine.
 
+Stamp does not embed or assume any specific governance policy. All schemas are supplied explicitly at runtime.
+
 ---
 
 ## What Stamp Is (and Is Not)
@@ -113,7 +115,7 @@ Each layer is deterministic and independently testable.
 
 ### Canonical Diagnostic Objects (CDOs)
 
-All validation errors are normalized into **stable, structured diagnostics**:
+All validation errors are normalized into **stable, structured diagnostics**.
 
 Each diagnostic includes:
 
@@ -143,8 +145,8 @@ Stamp separates **suggestion** from **mutation**.
   → describes *possible* fixes (no changes applied)
 
 * `fix apply`
-  → applies **only** safe, mechanical fixes
-  → never guesses
+  → applies **only** safe, mechanical fixes  
+  → never guesses  
   → never invents data
 
 Example of auto-fixable issue:
@@ -226,9 +228,15 @@ python -m stamp.cli.main validate run artifact.md \
 ```bash
 python -m stamp.cli.main validate repo path/to/repo \
   --schema ari-metadata.schema.v3.0.2.json
-```  
+```
 
-This discovers artifacts recursively and reports aggregate pass/fail results.  
+Only artifacts that explicitly declare metadata are considered governed and validated.  
+Files without metadata are discovered but intentionally ignored.
+
+Execution traces created via `--trace-out` are immutable execution evidence and are intentionally excluded from metadata governance and validation.
+
+> **Windows note:** On PowerShell, JSON output can be piped through  
+> `ConvertFrom-Json | ConvertTo-Json -Depth 10` instead of `jq`.
 
 ---
 
@@ -246,17 +254,17 @@ Stamp should always be boring, predictable, and explainable.
 
 ## Roadmap (Near-Term)
 
-* HTML-comment metadata extraction for code files
+* HTML-comment metadata extraction for additional code file types
 * Minimal Streamlit UI (paste → validate → explain)
-* Public v0.1.x hardening (UX polish, docs, edge cases)  
+* Public v0.1.x hardening (UX polish, docs, edge cases)
 * CRI-CORE integration (enforcement layer)
 
 ---
 
 ## Status
 
-> Actively developed
-> Internal coherence phase
+> Actively developed  
+> Internal coherence phase  
 > Architecture stable, contracts stabilizing
 
 ---
@@ -286,6 +294,3 @@ If you use **Stamp** in academic work, tooling research, or technical documentat
 <div align="center">
   <sub>© 2026 Waveframe Labs</sub>
 </div>
-
-
-
