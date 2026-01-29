@@ -48,6 +48,7 @@ def load_schema(source: Union[Path, str, dict]) -> ResolvedSchema:
 
     No validation, no ref resolution, no trust assumptions.
     """
+
     # Inline schema
     if isinstance(source, dict):
         identifier = source.get("$id", "inline-schema")
@@ -58,19 +59,7 @@ def load_schema(source: Union[Path, str, dict]) -> ResolvedSchema:
             schema=source,
         )
 
-    # Local file
-    if isinstance(source, Path):
-        text = source.read_text(encoding="utf-8")
-        data = json.loads(text)
-        identifier = data.get("$id", source.name)
-        return ResolvedSchema(
-            source="local",
-            identifier=identifier,
-            uri=data.get("$id"),
-            schema=data,
-        )
-
-    # Remote URL
+    # Remote URL (string)
     if isinstance(source, str) and source.startswith(("http://", "https://")):
         with urllib.request.urlopen(source) as response:
             text = response.read().decode("utf-8")
@@ -80,6 +69,21 @@ def load_schema(source: Union[Path, str, dict]) -> ResolvedSchema:
             source="remote",
             identifier=identifier,
             uri=source,
+            schema=data,
+        )
+
+    # Local filesystem path (Path or str)
+    if isinstance(source, str):
+        source = Path(source)
+
+    if isinstance(source, Path):
+        text = source.read_text(encoding="utf-8")
+        data = json.loads(text)
+        identifier = data.get("$id", source.name)
+        return ResolvedSchema(
+            source="local",
+            identifier=identifier,
+            uri=data.get("$id"),
             schema=data,
         )
 
