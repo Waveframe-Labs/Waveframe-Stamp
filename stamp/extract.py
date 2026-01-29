@@ -58,6 +58,7 @@ def extract_metadata(path: Path) -> ExtractedMetadata:
          - If malformed: error returned, no fallback
 
       2. HTML-comment metadata
+         - Raw or docstring-wrapped
          - Used only if no frontmatter exists
 
       3. No metadata
@@ -71,7 +72,7 @@ def extract_metadata(path: Path) -> ExtractedMetadata:
         if md_result.raw_block is not None or md_result.error is not None:
             return md_result
 
-    # Fallback: HTML comment metadata
+    # Fallback: HTML comment metadata (raw or docstring-wrapped)
     html_result = _extract_html_comment_metadata(path)
     if html_result.metadata is not None or html_result.error is not None:
         return html_result
@@ -143,12 +144,17 @@ def _extract_html_comment_metadata(path: Path) -> ExtractedMetadata:
     """
     Extract metadata from an HTML comment block at the top of a file.
 
-    Expected format:
+    Supported forms (must be first non-whitespace content):
 
-    <!--
-    key: value
-    ...
-    -->
+      <!-- ... -->
+
+      \"\"\"
+      <!-- ... -->
+      \"\"\"
+
+      '''
+      <!-- ... -->
+      '''
     """
     try:
         text = path.read_text(encoding="utf-8")
@@ -162,6 +168,21 @@ def _extract_html_comment_metadata(path: Path) -> ExtractedMetadata:
 
     stripped = text.lstrip()
 
+    # Unwrap top-level docstring if present
+    for quote in ('"""', "'''"):
+        if stripped.startswith(quote):
+            end = stripped.find(quote, len(quote))
+            if end == -1:
+                return ExtractedMetadata(
+                    artifact_path=path,
+                    metadata=None,
+                    raw_block=None,
+                    error="Unterminated docstring metadata block",
+                )
+            stripped = stripped[len(quote):end].lstrip()
+            break
+
+    # Expect HTML comment at top
     if not stripped.startswith("<!--"):
         return ExtractedMetadata(
             artifact_path=path,
