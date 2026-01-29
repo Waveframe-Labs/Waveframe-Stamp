@@ -1,11 +1,11 @@
 {
   "trace_version": "0.0.1",
   "tool": "stamp",
-  "tool_version": "0.0.1",
+  "tool_version": "0.1.0",
   "command": "validate repo",
   "schema": "C:\\GitHub\\Aurora-Research-Initiative\\schemas\\ari-metadata.schema.v3.0.2.json",
-  "started_at": "2026-01-29T20:11:08.651608+00:00",
-  "finished_at": "2026-01-29T20:11:08.700544+00:00",
+  "started_at": "2026-01-29T20:50:14.480058+00:00",
+  "finished_at": "2026-01-29T20:50:14.527671+00:00",
   "exit_code": 0,
   "artifacts": [
     {
