@@ -37,12 +37,19 @@ import typer
 
 from stamp.extract import extract_metadata
 from stamp.schema import load_schema
-from stamp.validate import validate_artifact
+from stamp.validate import validate_artifact, ValidationResult
 from stamp.fix import build_fix_proposals
 from stamp.remediation import build_remediation_summary
 from stamp.discovery import discover_artifacts
 
 app = typer.Typer()
+
+
+def _is_passed(result: ValidationResult) -> bool:
+    """
+    A validation passes iff there are no error-severity diagnostics.
+    """
+    return not any(d.get("severity") == "error" for d in result.diagnostics)
 
 
 @app.command("run")
@@ -64,29 +71,31 @@ def run(
         resolved_schema=resolved_schema,
     )
 
+    passed = _is_passed(result)
+
     if fix_proposals:
         proposals = build_fix_proposals(result)
         typer.echo(proposals)
-        raise typer.Exit(code=1 if not result.passed else 0)
+        raise typer.Exit(code=1 if not passed else 0)
 
     if remediation:
         report = build_remediation_summary(result)
         typer.echo(report)
-        raise typer.Exit(code=1 if not result.passed else 0)
+        raise typer.Exit(code=1 if not passed else 0)
 
     if summary:
         typer.echo(
             {
                 "artifact": str(artifact),
                 "schema": str(schema),
-                "passed": result.passed,
+                "passed": passed,
                 "diagnostic_count": len(result.diagnostics),
             }
         )
-        raise typer.Exit(code=1 if not result.passed else 0)
+        raise typer.Exit(code=1 if not passed else 0)
 
     typer.echo(result.diagnostics)
-    raise typer.Exit(code=1 if not result.passed else 0)
+    raise typer.Exit(code=1 if not passed else 0)
 
 
 @app.command("repo")
@@ -112,15 +121,17 @@ def repo(
             resolved_schema=resolved_schema,
         )
 
+        passed = _is_passed(result)
+
         results.append(
             {
                 "artifact": str(artifact.path),
-                "passed": result.passed,
+                "passed": passed,
                 "diagnostic_count": len(result.diagnostics),
             }
         )
 
-        if result.passed:
+        if passed:
             passed_count += 1
         else:
             failed_count += 1
