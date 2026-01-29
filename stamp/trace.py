@@ -21,7 +21,7 @@ copyright:
   holder: "Waveframe Labs"
   year: "2026"
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted drafting of trace artifact structure; human-owned execution semantics and final validation."
+ai_assistance_details: "AI-assisted drafting of trace artifact structure and versioning; human-owned execution semantics and final validation."
 dependencies: []
 anchors:
   - stamp-trace-v0.0.1
@@ -32,9 +32,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
-from typing import List, Optional, Dict, Any
-import json
 from pathlib import Path
+from typing import Any, Dict, List
+import json
 
 
 @dataclass(frozen=True)
@@ -46,6 +46,13 @@ class ArtifactTrace:
 
 @dataclass(frozen=True)
 class ExecutionTrace:
+    """
+    A deterministic, machine-readable record of a Stamp execution.
+
+    NOTE: This artifact intentionally does not embed diagnostics. It captures
+    run context + per-artifact summaries suitable for audit, CI, and enforcement.
+    """
+    trace_version: str
     tool: str
     tool_version: str
     command: str

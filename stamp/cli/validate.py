@@ -107,6 +107,7 @@ def run(
 
     if trace_out is not None:
         trace = ExecutionTrace(
+            trace_version="0.0.1",
             tool="stamp",
             tool_version="0.0.1",
             command="validate run",
@@ -182,6 +183,7 @@ def repo(
 
     if trace_out is not None:
         trace = ExecutionTrace(
+            trace_version="0.0.1",
             tool="stamp",
             tool_version="0.0.1",
             command="validate repo",
