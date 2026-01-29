@@ -1,9 +1,46 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://waveframelabs.org/schemas/stamp-cdo-v1.json",
   "title": "Stamp Canonical Diagnostic Object v1",
+  "filetype": "schema",
+  "type": "normative",
+  "domain": "enforcement",
+  "version": "0.1.0",
+  "doi": "TBD-0.1.0",
+  "status": "Active",
+  "created": "2026-01-18",
+  "updated": "2026-01-29",
+
+  "author": {
+    "name": "Shawn C. Wright",
+    "email": "swright@waveframelabs.org",
+    "orcid": "https://orcid.org/0009-0006-6043-9295"
+  },
+
+  "maintainer": {
+    "name": "Waveframe Labs",
+    "url": "https://waveframelabs.org"
+  },
+
+  "license": "Apache-2.0",
+
+  "copyright": {
+    "holder": "Waveframe Labs",
+    "year": "2026"
+  },
+
+  "ai_assisted": "partial",
+  "ai_assistance_details": "AI-assisted drafting of schema structure and field semantics under direct human control; all contract decisions reviewed and finalized by the author.",
+
+  "dependencies": [],
+  "anchors": [
+    "STAMP-CDO-v1.0.0"
+  ],
+
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://waveframelabs.org/schemas/stamp-cdo-v1.schema.json",
   "description": "The immutable contract for structural diagnostics emitted by the Stamp engine.",
+
   "type": "object",
+
   "required": [
     "id",
     "severity",
@@ -14,41 +51,50 @@
     "details",
     "provenance"
   ],
+
   "properties": {
     "id": {
       "type": "string",
       "pattern": "^[a-z_]+\\.[a-z_]+$",
       "description": "Deterministic identifier derived from keyword and failure class (e.g., required.missing)."
     },
+
     "severity": {
       "type": "string",
       "enum": ["error", "warning", "info"],
-      "description": "Structural impact level. Defaults to 'error' for all validation failures."
+      "description": "Structural impact level."
     },
+
     "schema_keyword": {
       "type": "string",
-      "pattern": "^[a-zA-Z][a-zA-Z0-9]*$",
-      "description": "The specific JSON Schema keyword that triggered the diagnostic (e.g., required, additionalProperties)."
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+      "description": "JSON Schema keyword or internal classification associated with the diagnostic."
     },
+
     "instance_path": {
       "type": "string",
-      "description": "RFC 6901 JSON Pointer to the location in the data where the failure occurred."
+      "description": "RFC 6901 JSON Pointer to the location in the instance where the failure occurred."
     },
+
     "schema_path": {
       "type": "string",
       "description": "RFC 6901 JSON Pointer to the constraint in the schema that was violated."
     },
+
     "message": {
       "type": "string",
       "description": "Human-readable, non-interpretive description of the failure."
     },
+
     "details": {
       "type": "object",
       "additionalProperties": true,
-      "description": "Contextual data specific to the failure type."
+      "description": "Contextual data specific to the diagnostic type."
     },
+
     "fix": {
       "type": ["object", "null"],
+      "description": "Optional mechanical fix proposal associated with the diagnostic.",
       "required": ["fixable", "strategy"],
       "properties": {
         "fixable": { "type": "boolean" },
@@ -57,6 +103,7 @@
       },
       "additionalProperties": false
     },
+
     "provenance": {
       "type": "object",
       "required": ["timestamp", "stamp_version"],
@@ -69,5 +116,6 @@
       "additionalProperties": false
     }
   },
+
   "additionalProperties": false
 }
