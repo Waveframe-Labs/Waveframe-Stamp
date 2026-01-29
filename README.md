@@ -38,6 +38,19 @@ anchors: []
 
 # Stamp
 
+<p align="center">
+  <a href="https://waveframelabs.org">
+    <img src="https://img.shields.io/badge/WAVEFRAME%20LABS-Institutional%20Repository-FF6A00?style=flat" />
+  </a>
+  <img src="https://img.shields.io/badge/version-0.1.0-blue?style=flat" />
+  <a href="https://orcid.org/0009-0006-6043-9295">
+    <img src="https://img.shields.io/badge/ORCID-0009--0006--6043--9295-A6CE39?logo=orcid&logoColor=white&style=flat" />
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-Apache--2.0-lightgrey?style=flat" />
+  </a>
+</p>
+
 **Stamp** is a deterministic metadata validation and remediation tool for governed research artifacts.
 
 It validates artifact metadata against a formal schema (e.g. ARI metadata), emits **structured diagnostics**, proposes **safe mechanical fixes**, and produces **human-action remediation summaries** when automation ends.
