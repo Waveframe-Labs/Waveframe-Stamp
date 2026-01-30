@@ -143,6 +143,26 @@ Stamp stops **exactly** where human or institutional judgment begins.
 
 ---  
 
+## [2026-01-29] — Repository Structure Normalization
+
+### Changed
+
+- Renamed `runner/` → `scripts/` to align with standard Python repository conventions for standalone execution and developer utilities.
+- Renamed `testdata/` → `examples/` to clarify intent as **user-facing demonstration artifacts** rather than internal test fixtures.
+- Updated corresponding folder READMEs to reflect naming changes and clarify scope, usage, and non-test status.
+
+### Removed
+
+- Deleted legacy `archive/` directory.
+  - Historical or deprecated materials are now expected to be recovered via version control history rather than retained in-tree.
+  - Removal eliminates ambiguity about active vs inactive artifacts and aligns with Stamp’s determinism and clarity principles.
+
+### Rationale
+
+These changes improve external readability, reduce ambiguity for collaborators and reviewers, and align the repository layout with widely recognized Python and open-source conventions—without altering any core contracts or execution semantics.
+
+---  
+
 ## [2026-01-29] — Repository Documentation Completion
 
 ### Added
