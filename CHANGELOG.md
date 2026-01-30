@@ -7,7 +7,7 @@ version: "0.1.0"
 doi: "TBD-0.1.0"
 status: "Active"
 created: "2026-01-18"
-updated: "2026-01-29"
+updated: "2026-01-30"
 
 author:
   name: "Shawn C. Wright"
@@ -154,6 +154,26 @@ Stamp stops **exactly** where human or institutional judgment begins.
 - Added documentation explicitly stating that the presence of `tests/` reflects **structural readiness**, not implied test coverage.
 
 This change aligns the repository with conventional Python tooling expectations while preserving Stamp’s explicit separation between validation logic, execution scripts, and test artifacts.
+
+--- 
+
+## [2026-01-30] — Metadata Compliance Repair
+
+### Fixed
+
+- Repaired seven governed artifacts that failed ARI metadata schema validation
+- Resolved structural and conditional metadata violations identified by Stamp diagnostics
+- Restored full repository-level validation pass under:
+  - governed-only semantics
+  - deterministic extraction rules
+  - ARI metadata schema v3.0.2
+
+### Notes
+
+This change is corrective only.
+
+No validation, diagnostic, fixing, or governance logic was modified.
+Only artifact metadata content was revised to conform to the declared schema.
 
 ---  
 
