@@ -156,5 +156,6 @@ Order matters:
 
 Stamp releases are boring on purpose.
 
- <sub>© 2026 Waveframe Labs — Independent Open-Science Research Entity</sub>
+<div align="center">
+  <sub>© 2026 Waveframe Labs — Independent Open-Science Research Entity</sub>
 </div>
