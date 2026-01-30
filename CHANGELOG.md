@@ -183,6 +183,11 @@ Only artifact metadata content was revised to conform to the declared schema.
   - licensing information
   - citation and BibTeX reference
 
+### Packaging metadata
+
+- Added PyPI `classifiers` to improve ecosystem compatibility and indexing.
+- Added `keywords` to improve discoverability on PyPI.
+
 ---  
 
 ## [2026-01-29] — Repository Structure Normalization
