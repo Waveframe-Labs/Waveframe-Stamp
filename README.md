@@ -34,7 +34,7 @@ anchors: []
 
 <p align="center">
   <img src="/figures/STAMP_BANNER.png" alt="Waveframe Stamp Banner" width="650">
-</p>
+</p> 
 
 # Stamp
 
@@ -68,37 +68,46 @@ Stamp does not embed or assume any specific governance policy. All schemas are s
 
 ---
 
-## Installation & Quick Start
+## Getting Started
 
-Stamp is distributed as a standard Python package and installs a `stamp` command-line tool.
+If you’re new to Stamp and want to understand **how to install it, run it, and interpret its output**, start here:
 
-### Install (recommended)
+**[Getting Started with Waveframe-Stamp](GETTING_STARTED.md)**
 
+This guide walks through installation, common workflows, and understanding the JSON output. It is written for users with **no prior knowledge** of Waveframe Labs or ARI.
+
+### Installation
+
+**Standard Install (Recommended)**
 ```bash
 pip install waveframe-stamp
 ```
 
-### Local development install
+**Local Development**
 
 ```bash
-git clone https://github.com/Waveframe-Labs/Waveframe-Stamp.git
+git clone [https://github.com/Waveframe-Labs/Waveframe-Stamp.git](https://github.com/Waveframe-Labs/Waveframe-Stamp.git)
 cd Waveframe-Stamp
 pip install -e .
 ```
 
-After installation, the `stamp` command should be available on your PATH:
+### Quick Usage
+
+Stamp commands emit **explicit JSON** to stdout for deterministic tooling and automation.
+
+**Validate a single artifact:**
 
 ```bash
-stamp --help
+stamp validate run artifact.md --schema ari-metadata.schema.v3.0.2.json
 ```
 
-### Quick validation example
+**Validate an entire repository (or directory):**
 
 ```bash
 stamp validate repo . --schema ari-metadata.schema.v3.0.2.json
 ```
 
-All commands emit **explicit JSON** to stdout for deterministic tooling and automation.
+*Note: Only artifacts that explicitly declare metadata are governed and validated. Execution traces generated via `--trace-out` are immutable and excluded from validation.*
 
 ---
 
@@ -106,9 +115,9 @@ All commands emit **explicit JSON** to stdout for deterministic tooling and auto
 
 Stamp is shell-agnostic. All CLI commands emit explicit JSON and do not rely on shell-specific behavior.
 
-* **Linux / macOS:** Pipe output to tools like `jq` if desired
-* **Windows (PowerShell):** Use `ConvertFrom-Json | ConvertTo-Json -Depth 10`
-* **CI systems:** Consume raw JSON directly
+* **Linux / macOS:** Pipe output to tools like `jq` if desired.
+* **Windows (PowerShell):** Use `ConvertFrom-Json | ConvertTo-Json -Depth 10`.
+* **CI systems:** Consume raw JSON directly.
 
 No external shell tooling is required to run Stamp itself.
 
@@ -159,18 +168,6 @@ Each layer is deterministic and independently testable.
 
 ---
 
-## CLI Usage
-
-```bash
-stamp validate run artifact.md --schema schema.json
-stamp validate repo path/to/repo --schema schema.json
-```
-
-Only artifacts that explicitly declare metadata are governed and validated.
-Execution traces generated via `--trace-out` are immutable and excluded from validation.
-
----
-
 ## Design Principles
 
 * **Determinism over convenience**
@@ -185,12 +182,12 @@ Stamp should always be boring, predictable, and explainable.
 
 ## Status
 
-> Architecture stable  
-> Core contracts frozen  
+> Architecture stable
+> Core contracts frozen
 > UX and packaging hardening in progress
 
 ---
 
 <div align="center">
-  <sub>© 2026 Waveframe Labs</sub>
+<sub>© 2026 Waveframe Labs</sub>
 </div>
