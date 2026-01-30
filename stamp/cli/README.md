@@ -1,13 +1,13 @@
 ---
 title: "Stamp — Command Line Interface"
 filetype: "documentation"
-type: "operational"
+type: "guidance"
 domain: "methodology"
 version: "0.1.0"
 doi: "TBD-0.1.0"
 status: "Active"
 created: "2026-01-29"
-updated: "2026-01-29"
+updated: "2026-01-30"
 
 author:
   name: "Shawn C. Wright"
@@ -26,11 +26,9 @@ copyright:
 
 ai_assisted: "none"
 
-dependencies:
-  - STAMP-CORE-LIBRARY
+dependencies: [] 
 
-anchors:
-  - STAMP-CLI
+anchors: []  
 ---
 
 This directory contains the **Stamp command-line interface.**  

@@ -1,8 +1,8 @@
 ---
 title: "Stamp — Examples"
 filetype: "documentation"
-type: "reference"
-domain: "testing"
+type: "guidance"
+domain: "documentation"
 version: "0.1.0"
 doi: "TBD-0.1.0"
 status: "Active"

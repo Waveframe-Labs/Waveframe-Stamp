@@ -4,7 +4,10 @@ filetype: "documentation"
 type: "specification"
 domain: "methodology"
 version: "0.1.0"
+doi: "TBD-0.1.0"
 status: "Active"
+created: "2026-01-29"
+updated: "2026-01-30"
 
 author:
   name: "Shawn C. Wright"
@@ -16,6 +19,10 @@ maintainer:
   url: "https://waveframelabs.org"
 
 license: "Apache-2.0"
+
+copyright:
+  holder: "Waveframe Labs"
+  year: "2026"
 
 ai_assisted: "partial"
 ai_assistance_details: "AI-assisted drafting of test structure documentation with human review and approval."

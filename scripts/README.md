@@ -2,7 +2,7 @@
 title: "Stamp — Scripts Directory"
 filetype: "documentation"
 type: "specification"
-domain: "tooling"
+domain: "documentation"
 version: "0.1.0"
 doi: "TBD-0.1.0"
 status: "Active"

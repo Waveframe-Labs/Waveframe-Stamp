@@ -7,7 +7,7 @@ version: "0.1.0"
 doi: "TBD-0.1.0"
 status: "Active"
 created: "2026-01-29"
-updated: "2026-01-29"
+updated: "2026-01-30"
 
 author:
   name: "Shawn C. Wright"
@@ -29,7 +29,7 @@ ai_assisted: "none"
 dependencies: []
 
 anchors:
-  - STAMP-CORE-LIBRARY
+  - STAMP-CORE-LIBRARY-v0.1.0
 ---
 
 This directory contains the **Stamp core library.**  

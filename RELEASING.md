@@ -1,13 +1,13 @@
 ---
 title: "Stamp — Releasing Guide"
 filetype: "documentation"
-type: "procedure"
+type: "guidance"
 domain: "methodology"
 version: "0.1.0"
 doi: "TBD-0.1.0"
 status: "Active"
 created: "2026-01-29"
-updated: "2026-01-29"
+updated: "2026-01-30"
 
 author:
   name: "Shawn C. Wright"
