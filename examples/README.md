@@ -1,5 +1,5 @@
 ---
-title: "Stamp — Test Data"
+title: "Stamp — Examples"
 filetype: "documentation"
 type: "reference"
 domain: "testing"
@@ -31,7 +31,7 @@ dependencies: []
 anchors: []
 ---
 
-# testdata/
+# examples/
 
 This directory contains **minimal, non-normative test inputs** used for local testing, debugging, and development sanity checks.
 
@@ -70,7 +70,7 @@ This schema is intentionally incomplete and **not a normative schema**.
 This directory is **not** a fixture suite.
 
 - **Fixtures** (`fixtures/`) are contract-level, versioned, and relied upon for correctness guarantees.
-- **Test data** (`testdata/`) is ad hoc, mutable, and intended only for development convenience.
+- **Examples** (`examples/`) are ad hoc, mutable, and intended only for development convenience.
 
 Downstream tooling **must not** rely on files in this directory for correctness or compatibility guarantees.
 
