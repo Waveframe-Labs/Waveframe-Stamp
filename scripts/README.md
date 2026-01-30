@@ -113,6 +113,28 @@ They may be wrapped by CI pipelines or invoked manually during development.
 
 ---
 
+## Testing Scope and Limitations
+
+The scripts in this directory are **not** a formal unit test suite.
+
+They are intentionally provided as **manual and integration-level runners** used during development to:
+
+- execute deterministic fixture sets
+- perform smoke checks across validation, diagnostics, and remediation layers
+- validate end-to-end behavior outside of a test harness
+
+At present, Stamp does **not** include a conventional `tests/` directory with automated unit tests (e.g. `pytest`-discovered test files).
+
+This is a deliberate sequencing choice:
+
+- Core contracts, schemas, and execution semantics were stabilized first
+- Deterministic fixtures (`fixtures/`) and runners (`scripts/`) serve as the current verification mechanism
+- Formal unit tests will be introduced once public interfaces are fully frozen
+
+Downstream tooling and enforcement layers should **not** rely on these scripts as an API or test contract. They exist solely to exercise the system during development and review.
+
+---  
+
 <div align="center">
   <sub>© 2026 Waveframe Labs</sub>
 </div>
