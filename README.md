@@ -249,12 +249,13 @@ BibTeX
 @software{stamp_2026,
   title        = {Stamp: A Schema-Agnostic Structural Diagnostics Engine},
   author       = {Wright, Shawn C.},
+  orcid        = {0009-0006-6043-9295},
   year         = {2026},
   version      = {0.1.0},
   publisher    = {Waveframe Labs},
   url          = {https://github.com/Waveframe-Labs/Waveframe-Stamp},
   doi          = {TBD}
-}
+}  
 ```  
 
 ---  
