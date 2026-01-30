@@ -7,7 +7,7 @@ version: "0.1.0"
 doi: "TBD-0.1.0"
 status: "Active"
 created: "2026-01-16"
-updated: "2026-01-29"
+updated: "2026-01-30"
 
 author:
   name: "Shawn C. Wright"
@@ -186,7 +186,78 @@ Stamp should always be boring, predictable, and explainable.
 > Core contracts frozen
 > UX and packaging hardening in progress
 
+---  
+
+## Governance Semantics
+
+Stamp distinguishes between **discovered artifacts** and **governed artifacts**.
+
+An artifact is considered *governed* if and only if it explicitly declares a metadata block
+(YAML frontmatter or HTML-comment metadata).
+
+During repository validation:
+
+- files without metadata are discovered
+- but are intentionally ignored
+- and are not treated as failures
+
+This is a deliberate governance boundary.
+
+Stamp never guesses intent and never infers governance.
+
 ---
+
+## Execution Traces
+
+Stamp can emit an immutable execution trace artifact using:
+
+```bash
+--trace-out traces/stamp-validation-trace.json
+```  
+Trace artifacts record:
+
+- tool identity and version
+- command executed
+- schema used
+- timestamps
+- per-artifact validation results
+
+Execution traces are:
+
+- machine-validated
+- immutable audit records
+- intentionally excluded from metadata governance
+
+They exist to support auditability and downstream enforcement tooling.
+
+---  
+
+## License
+
+Stamp is released under the **Apache License, Version 2.0.**  
+
+See the LICENSE file for the full text.
+
+---
+
+## Citation
+
+If you use Stamp in academic work, tooling research, or technical documentation, please cite it as follows.
+
+BibTeX
+```  
+@software{stamp_2026,
+  title        = {Stamp: A Schema-Agnostic Structural Diagnostics Engine},
+  author       = {Wright, Shawn C.},
+  year         = {2026},
+  version      = {0.1.0},
+  publisher    = {Waveframe Labs},
+  url          = {https://github.com/Waveframe-Labs/Waveframe-Stamp},
+  doi          = {TBD}
+}
+```  
+
+---  
 
 <div align="center">
 <sub>© 2026 Waveframe Labs</sub>
