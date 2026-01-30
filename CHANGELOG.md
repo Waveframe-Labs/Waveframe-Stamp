@@ -143,6 +143,49 @@ Stamp stops **exactly** where human or institutional judgment begins.
 
 ---  
 
+## [2026-01-29] — Repository Documentation Completion
+
+### Added
+
+#### Root-Level Documentation
+
+- Finalized **README.md** as the authoritative entry point for the repository
+- Added **Getting Started** section with:
+  - Installation paths (editable install and packaged usage)
+  - Minimal, copy-safe CLI examples
+  - Explicit shell compatibility guidance
+- Linked **GETTING_STARTED.md** as the primary onboarding document
+- Added **RELEASING.md** to document release, tagging, and publication procedures
+- Added **CITATION.cff** to support citation indexing and academic reuse
+
+#### Directory-Level READMEs
+
+Added dedicated README files to all major repository subdirectories to eliminate ambiguity and support external review:
+
+- `docs/` — operational and conceptual documentation
+- `figures/` — visual assets and usage constraints
+- `fixtures/` — versioned normative test fixtures
+- `runner/` — fixture execution and smoke test runners
+- `schemas/` — frozen schema contracts (CDO v1, NPO v1)
+- `testdata/` — non-normative sandbox artifacts
+- `traces/` — immutable execution evidence
+
+Each directory README:
+- Declares scope and intent
+- Distinguishes normative vs non-normative content
+- Explicitly documents governance and immutability expectations
+
+### Outcome
+
+The repository is now **self-describing at every level**, enabling:
+- Zero-context external review
+- Deterministic onboarding
+- Clear separation between core logic, documentation, fixtures, and execution evidence
+
+This documentation pass does not alter any runtime behavior or contracts.
+
+---  
+
 ## [2026-01-29] — Packaging, CLI Identity, and Documentation Hardening
 
 ### Added
