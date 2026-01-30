@@ -42,7 +42,7 @@ Its purpose is to provide an auditable history of how the Stamp layer reached it
 
 ---
 
-## [Unreleased] — Stamp Core Layer (v0.1.x)
+## [v0.1.0] — Stamp Core Layer
 
 > Core architecture complete. Contracts stabilizing. UX hardening in progress.
 
