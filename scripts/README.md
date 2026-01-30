@@ -1,5 +1,5 @@
 ---
-title: "Stamp — Runner Directory"
+title: "Stamp — Scripts Directory"
 filetype: "documentation"
 type: "specification"
 domain: "tooling"
@@ -30,7 +30,7 @@ ai_assistance_details: "AI-assisted drafting of documentation structure and clar
 dependencies: []
 
 anchors:
-  - STAMP-RUNNER-DIR-v0.1.0
+  - STAMP-SCRIPTS-DIR-v0.1.0
 ---
 
 # runner/
@@ -104,9 +104,9 @@ If a fixture or runner fails, the issue is **always upstream** in core logic.
 These scripts are typically run via:
 
 ```bash
-python runner/run_fixtures.py
-python runner/run_npo_fixtures.py
-python runner/run_smoke.py
+python scripts/run_fixtures.py
+python scripts/run_npo_fixtures.py
+python scripts/run_smoke.py
 ```
 
 They may be wrapped by CI pipelines or invoked manually during development.
