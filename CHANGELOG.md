@@ -143,6 +143,20 @@ Stamp stops **exactly** where human or institutional judgment begins.
 
 ---  
 
+### Added — Formal Test Structure
+
+- Introduced a standard `tests/` directory to establish the canonical location for future unit and integration tests.
+- Clarified the architectural distinction between:
+  - `tests/` — formal, automated unit/integration tests (pytest-compatible)
+  - `scripts/` — developer-facing execution and smoke-test utilities
+  - `fixtures/` — stable, versioned test fixtures
+  - `examples/` — user-facing demonstration artifacts
+- Added documentation explicitly stating that the presence of `tests/` reflects **structural readiness**, not implied test coverage.
+
+This change aligns the repository with conventional Python tooling expectations while preserving Stamp’s explicit separation between validation logic, execution scripts, and test artifacts.
+
+---  
+
 ## [2026-01-29] — Repository Structure Normalization
 
 ### Changed
