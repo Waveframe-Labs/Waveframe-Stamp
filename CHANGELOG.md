@@ -173,7 +173,15 @@ This change aligns the repository with conventional Python tooling expectations 
 This change is corrective only.
 
 No validation, diagnostic, fixing, or governance logic was modified.
-Only artifact metadata content was revised to conform to the declared schema.
+Only artifact metadata content was revised to conform to the declared schema. 
+
+### Documentation
+
+- Restored and formalized README sections for:
+  - governed-only validation semantics
+  - execution trace artifacts and their non-governed status
+  - licensing information
+  - citation and BibTeX reference
 
 ---  
 
