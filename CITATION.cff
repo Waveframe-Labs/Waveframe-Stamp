@@ -1,0 +1,70 @@
+cff-version: 1.2.0
+title: "Waveframe-Stamp: A Deterministic Metadata Diagnostics and Remediation Engine"
+message: >
+  Waveframe-Stamp is a deterministic, schema-agnostic diagnostics engine for
+  governed research artifacts. It validates structured artifact metadata
+  against explicitly supplied schemas, normalizes all validation results into
+  stable Canonical Diagnostic Objects (CDOs), and produces structured,
+  machine-readable remediation outputs when automation ends.
+
+  Stamp is explicitly policy-neutral and enforcement-free. It does not invent,
+  infer, or mutate metadata without an explicit user command. Instead, it
+  separates validation (fact emission), fix proposals (claims), and human
+  judgment into distinct, auditable stages. This design enables reproducible
+  governance workflows, deterministic CI enforcement, and downstream
+  integration with policy engines without coupling validation logic to
+  institutional authority.
+
+  Stamp supports Markdown frontmatter and embedded code metadata, emits
+  JSON-first CLI output suitable for automation and review tooling, and
+  produces immutable execution trace artifacts for audit and provenance.
+  It is designed as a stable, explainable “front door” to governed research
+  systems and serves as an upstream dependency for enforcement layers such as
+  CRI-CORE.
+
+type: software
+version: 0.1.0
+date-released: 2026-01-29
+
+authors:
+  - family-names: Wright
+    given-names: Shawn C.
+    email: swright@waveframelabs.org
+    orcid: https://orcid.org/0009-0006-6043-9295
+
+repository-code: https://github.com/Waveframe-Labs/Waveframe-Stamp
+url: https://waveframelabs.org
+license: Apache-2.0
+
+keywords:
+  - metadata validation
+  - research governance
+  - reproducibility
+  - schema validation
+  - diagnostics
+  - provenance
+  - scientific tooling
+  - ai-assisted research
+
+abstract: >
+  Waveframe-Stamp is a deterministic metadata validation and diagnostics engine
+  designed to support governed, reproducible research workflows. It validates
+  artifact metadata against explicit schemas, emits stable and structured
+  diagnostics describing factual schema violations, and generates conservative
+  fix proposals and human-action remediation summaries without performing
+  enforcement or policy interpretation.
+
+  Unlike traditional linters or validators, Stamp enforces a strict separation
+  between validation, remediation, and judgment. All validation results are
+  normalized into Canonical Diagnostic Objects (CDOs) with stable semantic
+  identifiers, making diagnostics diffable, loggable, and suitable for
+  automation, UI presentation, and long-term audit. Fix proposals are generated
+  deterministically as claims rather than actions, and automated mutation is
+  limited to explicitly safe, mechanical transformations.
+
+  Stamp is schema-agnostic, policy-neutral, and format-flexible, supporting
+  Markdown frontmatter and embedded code metadata. It emits JSON-first CLI
+  output and produces immutable execution trace artifacts for provenance and
+  enforcement systems. Stamp is intended as a foundational “front door” to
+  governed research ecosystems and serves as an upstream dependency for
+  enforcement layers such as CRI-CORE.
