@@ -23,8 +23,10 @@ message: >
   CRI-CORE.
 
 type: software
-version: 0.1.0
-date-released: 2026-01-29
+version: 0.1.0  
+Concept DOI: 10.5281/zenodo.18436622
+Version DOI: 10.5281/zenodo.18436623  
+date-released: 2026-01-30
 
 authors:
   - family-names: Wright

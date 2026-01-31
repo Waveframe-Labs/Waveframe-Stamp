@@ -4,10 +4,10 @@ filetype: "documentation"
 type: "specification"
 domain: "methodology"
 version: "0.1.0"
-doi: "TBD-0.1.0"
+doi: "10.5281/zenodo.18436622"
 status: "Active"
 created: "2026-01-16"
-updated: "2026-01-30"
+updated: "2026-01-31"
 
 author:
   name: "Shawn C. Wright"
@@ -39,10 +39,13 @@ anchors: []
 # Stamp
 
 <p align="center">
+  <a href="https://doi.org/10.5281/zenodo.18436622">
+    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.18436622.svg" />
+  </a>
   <a href="https://waveframelabs.org">
     <img src="https://img.shields.io/badge/WAVEFRAME%20LABS-Institutional%20Repository-FF6A00?style=flat" />
   </a>
-  <img src="https://img.shields.io/badge/version-0.1.0-blue?style=flat" />
+  <img src="https://img.shields.io/badge/version-0.1.1-blue?style=flat" />
   <a href="https://orcid.org/0009-0006-6043-9295">
     <img src="https://img.shields.io/badge/ORCID-0009--0006--6043--9295-A6CE39?logo=orcid&logoColor=white&style=flat" />
   </a>
@@ -251,10 +254,10 @@ BibTeX
   author       = {Wright, Shawn C.},
   orcid        = {0009-0006-6043-9295},
   year         = {2026},
-  version      = {0.1.0},
+  version      = {0.1.1},
   publisher    = {Waveframe Labs},
   url          = {https://github.com/Waveframe-Labs/Waveframe-Stamp},
-  doi          = {TBD}
+  doi          = {10.5281/zenodo.18436622}
 }  
 ```  
 
