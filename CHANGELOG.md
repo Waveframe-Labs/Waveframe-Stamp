@@ -3,11 +3,11 @@ title: "Stamp — Changelog"
 filetype: "log"
 type: "normative"
 domain: "documentation"
-version: "0.1.0"
+version: "0.1.1"
 doi: "TBD-0.1.0"
 status: "Active"
 created: "2026-01-18"
-updated: "2026-01-30"
+updated: "2026-01-31"
 
 author:
   name: "Shawn C. Wright"
@@ -24,12 +24,14 @@ copyright:
   holder: "Waveframe Labs"
   year: "2026"
 
-ai_assisted: "none"
+ai_assisted: "partial"
+ai_assistance_details: "AI-assisted drafting and wording of changelog entries and release documentation under direct human authorship, review, and final approval."
+
 
 dependencies: []
 
 anchors:
-  - STAMP-CHANGELOG-v0.1.0
+  - STAMP-CHANGELOG-v0.1.1
 ---
 
 # Stamp — Change Log
@@ -40,7 +42,14 @@ It is **not a release log** and does **not imply end-user readiness**.
 
 Its purpose is to provide an auditable history of how the Stamp layer reached its current form, such that downstream systems (notably **CRI-CORE**) may rely on its guarantees without re-interpreting intent.
 
----
+---  
+
+## [v0.1.1] — Packaging Hotfix
+
+### Fixed
+- Added missing runtime dependency on **PyYAML** to prevent `ModuleNotFoundError: No module named 'yaml'` when invoking the Stamp CLI on clean environments.
+
+---  
 
 ## [v0.1.0] — Stamp Core Layer
 
