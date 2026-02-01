@@ -4,10 +4,10 @@ filetype: "documentation"
 type: "guidance"
 domain: "methodology"
 version: "0.1.0"
-doi: "TBD-0.1.0"
+doi: "10.5281/zenodo.18436623"
 status: "Active"
 created: "2026-01-29"
-updated: "2026-01-30"
+updated: "2026-02-01"
 
 author:
   name: "Shawn C. Wright"
@@ -24,7 +24,8 @@ copyright:
   holder: "Waveframe Labs"
   year: "2026"
 
-ai_assisted: "none"
+ai_assisted: "partial"
+ai_assistance_details: "AI-assisted drafting and structural refinement under direct human authorship, procedural review, and final human approval. All release rules, ordering, and governance constraints were defined and verified by the human author."
 
 dependencies: []
 

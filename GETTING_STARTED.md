@@ -4,10 +4,10 @@ filetype: "documentation"
 type: "guidance"
 domain: "methodology"
 version: "0.1.0"
-doi: "TBD-0.1.0"
+doi: "10.5281/zenodo.18436623"
 status: "Active"
 created: "2026-01-29"
-updated: "2026-01-30"
+updated: "2026-02-01"
 
 author:
   name: "Shawn C. Wright"
