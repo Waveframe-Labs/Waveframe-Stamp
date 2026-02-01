@@ -7,7 +7,7 @@ version: "0.1.1"
 doi: "TBD-0.1.0"
 status: "Active"
 created: "2026-01-18"
-updated: "2026-01-31"
+updated: "2026-02-01"
 
 author:
   name: "Shawn C. Wright"
@@ -41,6 +41,43 @@ This document records **material design decisions, contract freezes, and layer-l
 It is **not a release log** and does **not imply end-user readiness**.
 
 Its purpose is to provide an auditable history of how the Stamp layer reached its current form, such that downstream systems (notably **CRI-CORE**) may rely on its guarantees without re-interpreting intent.
+
+---  
+
+## [v0.1.1] — Fixture Provenance Normalization & DOI Attribution
+
+### Added
+
+- Concept DOI and version DOI references were added to governed documentation and metadata fields where applicable.
+- DOI badge and citation references were introduced in README artifacts.
+
+### Changed
+
+#### Fixture contracts
+
+- Revised Canonical Diagnostic Object (CDO) fixtures to:
+  - use fixture-only provenance values
+  - remove coupling to real tool versions and validator engines
+  - normalize diagnostic identifiers to the frozen CDO vocabulary
+- Revised Normalization Proposal Object (NPO) fixtures to:
+  - align diagnostic identifiers with the CDO fixture vocabulary
+  - use fixture-only provenance (`fixture`, `fixture-v1`, `fixture-mock`)
+  - remove implicit references to real Stamp executions or schema engines
+
+These changes ensure that fixture files represent
+**contract-level expectations only**, not historical tool behavior.
+
+#### Metadata attribution
+
+- Populated Concept DOI and version DOI fields where applicable.
+- Updated citation and badge references to reflect Zenodo records.
+- Corrected AI assistance declarations in documentation metadata where previously marked as none.
+
+### Rationale
+
+This release removes epistemic leakage between contract fixtures and
+runtime execution, and establishes authoritative DOI attribution for
+the Stamp layer without modifying core validation or normalization logic.
 
 ---  
 
