@@ -3,20 +3,20 @@
     "name": "Stamp Normalization Proposal Logic Fixtures",
     "version": "1.0.0",
     "npo_schema_uri": "https://waveframelabs.org/schemas/stamp-npo-v1.json",
-    "description": "Defines the mapping from CDOs (Facts) to NPO Proposals (Claims). Tests classification, action derivation, and epistemic boundaries."
+    "description": "Defines the deterministic mapping from Canonical Diagnostic Objects (Facts) to Normalization Proposal Objects (Claims). These fixtures validate classification, action derivation, and epistemic boundaries."
   },
   "cases": [
     {
       "id": "npo_001_mechanical_prune",
-      "description": "Scenario A: A strictly forbidden property triggers a mechanical prune proposal. Provenance: Derived directly from CDO fix semantics.",
+      "description": "Scenario A: A strictly forbidden property triggers a mechanical prune proposal. Provenance is synthetic and fixture-only.",
       "input": {
         "source_artifact": {
-          "path": "docs/metadata.json",
+          "path": "fixtures/example.json",
           "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         },
         "schema_context": {
-          "id": "ari-metadata-3.0.2",
-          "uri": "https://waveframelabs.org/schemas/ari-metadata-3.0.2.json"
+          "id": "fixture-schema-v1",
+          "uri": "https://example.org/fixture/schema.json"
         },
         "diagnostics": [
           {
@@ -38,9 +38,9 @@
             },
             "provenance": {
               "timestamp": "2026-01-01T00:00:00Z",
-              "stamp_version": "0.1.0",
-              "schema_version": "draft-2020-12",
-              "validator_engine": "stamp-core"
+              "stamp_version": "fixture",
+              "schema_version": "fixture-v1",
+              "validator_engine": "fixture-mock"
             }
           }
         ]
@@ -57,14 +57,14 @@
       },
       "expected_proposals": [
         {
-          "id": "24bd6fc33df8384453865c4ff5646807407802dac0fb5e28b5c1acdfbe6d9ad5",  
+          "id": "24bd6fc33df8384453865c4ff5646807407802dac0fb5e28b5c1acdfbe6d9ad5",
           "diagnostic_id": "object.no_additional_properties",
           "target": {
             "instance_path": "",
             "schema_path": "/additionalProperties"
           },
           "action": "remove",
-          "current_value": 123,
+          "current_value": null,
           "proposed_value": null,
           "classification": "mechanical",
           "basis": "schema_strictness",
@@ -77,24 +77,24 @@
     },
     {
       "id": "npo_002_inferred_enum_casing",
-      "description": "Scenario B: A casing mismatch triggers an inferred replacement proposal. Provenance: Case-normalization heuristic.",
+      "description": "Scenario B: A casing mismatch triggers an inferred replacement proposal. Provenance is synthetic and fixture-only.",
       "input": {
         "source_artifact": {
-          "path": "docs/metadata.json",
+          "path": "fixtures/example.json",
           "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
         },
         "schema_context": {
-          "id": "ari-metadata-3.0.2",
-          "uri": "https://waveframelabs.org/schemas/ari-metadata-3.0.2.json"
+          "id": "fixture-schema-v1",
+          "uri": "https://example.org/fixture/schema.json"
         },
         "diagnostics": [
           {
-            "id": "enum.invalid",
+            "id": "enum.mismatch",
             "severity": "error",
             "schema_keyword": "enum",
             "instance_path": "/status",
             "schema_path": "/properties/status/enum",
-            "message": "Value is not allowed.",
+            "message": "Value is not one of the allowed enum values.",
             "details": {
               "allowed_values": ["draft", "active"],
               "value": "Draft"
@@ -102,9 +102,9 @@
             "fix": null,
             "provenance": {
               "timestamp": "2026-01-01T00:00:00Z",
-              "stamp_version": "0.1.0",
-              "schema_version": "draft-2020-12",
-              "validator_engine": "stamp-core"
+              "stamp_version": "fixture",
+              "schema_version": "fixture-v1",
+              "validator_engine": "fixture-mock"
             }
           }
         ]
@@ -121,8 +121,8 @@
       },
       "expected_proposals": [
         {
-          "id": "10cf2f01310c1081b26d819ec4bb3dd9d41023ade3fec5caf8e8b81e1e25ac46",  
-          "diagnostic_id": "enum.invalid",
+          "id": "10cf2f01310c1081b26d819ec4bb3dd9d41023ade3fec5caf8e8b81e1e25ac46",
+          "diagnostic_id": "enum.mismatch",
           "target": {
             "instance_path": "/status",
             "schema_path": "/properties/status/enum"
@@ -141,15 +141,15 @@
     },
     {
       "id": "npo_003_prohibited_missing_license",
-      "description": "Scenario C: A missing license triggers a prohibited negative claim. Provenance: Governance policy forbids inference.",
+      "description": "Scenario C: A missing required field triggers a prohibited proposal. Automated inference is disallowed.",
       "input": {
         "source_artifact": {
-          "path": "docs/metadata.json",
+          "path": "fixtures/example.json",
           "hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
         },
         "schema_context": {
-          "id": "ari-metadata-3.0.2",
-          "uri": "https://waveframelabs.org/schemas/ari-metadata-3.0.2.json"
+          "id": "fixture-schema-v1",
+          "uri": "https://example.org/fixture/schema.json"
         },
         "diagnostics": [
           {
@@ -165,9 +165,9 @@
             "fix": null,
             "provenance": {
               "timestamp": "2026-01-01T00:00:00Z",
-              "stamp_version": "0.1.0",
-              "schema_version": "draft-2020-12",
-              "validator_engine": "stamp-core"
+              "stamp_version": "fixture",
+              "schema_version": "fixture-v1",
+              "validator_engine": "fixture-mock"
             }
           }
         ]
@@ -184,7 +184,7 @@
       },
       "expected_proposals": [
         {
-          "id": "b7d21ae0a296c473d61a3b4666198b93338510549fe09c560e0117cac0ddcbc3",  
+          "id": "b7d21ae0a296c473d61a3b4666198b93338510549fe09c560e0117cac0ddcbc3",
           "diagnostic_id": "required.missing",
           "target": {
             "instance_path": "",
