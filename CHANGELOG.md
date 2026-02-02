@@ -50,6 +50,7 @@ Its purpose is to provide an auditable history of how the Stamp layer reached it
 
 - Concept DOI and version DOI references were added to governed documentation and metadata fields where applicable.
 - DOI badge and citation references were introduced in README artifacts.
+- v0.1.1 Zenodo DOI to governed documentation (CHANGELOG, GETTING_STARTED)
 
 ### Changed
 
