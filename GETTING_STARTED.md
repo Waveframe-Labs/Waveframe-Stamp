@@ -3,7 +3,7 @@ title: "Stamp — Getting Started"
 filetype: "documentation"
 type: "guidance"
 domain: "methodology"
-version: "0.1.0"
+version: "0.1.1"
 doi: "10.5281/zenodo.18436623"
 status: "Active"
 created: "2026-01-29"
@@ -82,6 +82,9 @@ This installs Stamp in editable mode and exposes the `stamp` command locally.
 
 ### Validate a single artifact
 
+The `--schema` argument must point to a local JSON Schema file path (relative or absolute).
+Stamp does not download schemas automatically.
+
 ```bash
 stamp validate run artifact.md   --schema ari-metadata.schema.v3.0.2.json
 ```
@@ -91,6 +94,8 @@ Output is **explicit JSON** describing validation diagnostics.
 ---
 
 ### Get a summary instead of full diagnostics
+
+The summary output returns only pass/fail counts and artifact totals.
 
 ```bash
 stamp validate run artifact.md   --schema ari-metadata.schema.v3.0.2.json   --summary
@@ -141,8 +146,10 @@ stamp validate repo . --schema schema.json | jq
 
 Stamp can emit **immutable execution trace artifacts** for audit and reproducibility.
 
+The output directory must already exist.
+
 ```bash
-stamp validate repo .   --schema schema.json   --trace-out traces/stamp-validation-trace.json
+stamp validate repo .   --schema schema.json   --trace-out stamp-validation-trace.json
 ```
 
 Trace files:
