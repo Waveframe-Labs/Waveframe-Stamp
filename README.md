@@ -33,7 +33,7 @@ anchors: []
 ---
 
 <p align="center">
-  <img src="/figures/STAMP_BANNER.png" alt="Waveframe Stamp Banner" width="650">
+  <img src="https://raw.githubusercontent.com/Waveframe-Labs/.github/main/assets/branding/canon_wf_logo_extended.png" width="700">
 </p> 
 
 # Stamp
